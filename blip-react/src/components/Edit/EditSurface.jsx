@@ -220,8 +220,8 @@ export default function EditSurface({ layer, edit, wiggle, children }) {
         const self = ref.current?.querySelector(`[data-piece="${p.piece}"]`);
         const under = document.elementsFromPoint(ev.clientX, ev.clientY).map(n => n.closest?.('.pc-map[data-piece]')).find(n => n && n !== self);
         const me = layerRef.current.pieces?.find(q => q.id === p.piece);
-        if (under && me && me.kind === 'item') {
-          dispatchEvent(new CustomEvent('blip:mapmerge', { detail: { layerId: layer.id, map: under.dataset.piece, item: me.id, name: me.text } }));
+        if (under && me && me.kind !== 'map' && (me.kind === 'item' || me.text?.trim())) { // 이름(글)이 있는 조각이면 지도에 던져 📍로
+          dispatchEvent(new CustomEvent('blip:mapmerge', { detail: { layerId: layer.id, map: under.dataset.piece, item: me.id, name: (me.text || '').trim().split('\n')[0].slice(0, 40), x: ev.clientX, y: ev.clientY } }));
         }
       };
       addEventListener('pointermove', move); addEventListener('pointerup', up); addEventListener('pointercancel', up);

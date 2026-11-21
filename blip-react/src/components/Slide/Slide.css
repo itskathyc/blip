@@ -501,6 +501,7 @@ button.dv-card:hover { box-shadow: 0 0 0 1.5px rgba(0, 0, 0, .12); }
 .px-enter { flex: none; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: #1d1d1f; color: #fff; display: grid; place-items: center; cursor: pointer; }
 .px-enter:disabled { background: #d1d1d6; cursor: default; }
 .px-save { flex: none; margin-left: 4px; height: 28px; padding: 0 14px; border: 0; border-radius: 99px; background: #0a84ff; color: #fff; font: 700 12px -apple-system, "Apple SD Gothic Neo", sans-serif; cursor: pointer; }
+.px-text[contenteditable="true"], .px-list[contenteditable="true"] { outline: 0; caret-color: #0a84ff; cursor: text; }
 .px-list { margin: 0; padding-left: 16px; font-size: 13px; line-height: 20px; color: #1d1d1f; }
 .px-write .px-list li { animation: pxLi .35s calc(var(--i) * 180ms) cubic-bezier(.2, 1, .3, 1) both; }
 @keyframes pxLi { from { opacity: 0; transform: translateX(-6px); } }
@@ -508,3 +509,85 @@ button.dv-card:hover { box-shadow: 0 0 0 1.5px rgba(0, 0, 0, .12); }
 .px-saved .px-box { padding: 0; background: none; box-shadow: none; min-height: 0 !important; transition: padding .25s, background .25s; }
 .px-saved .px-text, .px-saved .px-list { font-size: 13.5px; line-height: 1.55; color: #3a3a3c; }
 @media (prefers-reduced-motion: reduce) { .px, .px-opt, .px-in, .px-foot { animation: none; } }
+
+/* AI안경 이슈 몰아보기: 유튜브 알고리즘처럼 — 맨 위 영상 크게, 아래 기사 한 줄씩 */
+.yf { position: absolute; inset: 0; padding: 18px 18px 36px; display: flex; flex-direction: column; gap: 9px; }
+.sl .yf-h { margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -.03em; line-height: 1.2; color: #1d1d1f; }
+.yf-top { display: flex; flex-direction: column; gap: 3px; color: inherit; text-decoration: none; }
+.yf-thumb { position: relative; display: grid; place-items: center; height: 100px; border-radius: 12px; overflow: hidden; }
+.yf-thumb i { width: 46px; height: 32px; border-radius: 9px; background: #ff0033; display: grid; place-items: center; }
+.yf-thumb i svg { width: 16px; height: 16px; }
+.yf-thumb em { position: absolute; left: 10px; bottom: 8px; font-style: normal; font: 800 12px -apple-system, sans-serif; color: #fff; letter-spacing: .02em; }
+.yf-top b { font-size: 13px; font-weight: 700; line-height: 1.35; letter-spacing: -.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.yf-top small, .yf-txt small { font-size: 11px; color: #8e8e93; }
+.yf-list { display: flex; flex-direction: column; gap: 6px; }
+.yf-row { display: flex; gap: 9px; align-items: center; padding: 6px 8px; border-radius: 12px; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .05); color: inherit; text-decoration: none; }
+a.yf-row:hover, a.yf-top:hover b { text-decoration: none; }
+a.yf-row:hover { box-shadow: 0 0 0 1.5px rgba(0, 0, 0, .12); }
+.yf-src { flex: none; width: 44px; height: 44px; border-radius: 9px; display: grid; place-items: center; color: #fff; font: 800 11px -apple-system, "Apple SD Gothic Neo", sans-serif; letter-spacing: -.01em; text-align: center; }
+.yf-txt { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.yf-txt b { font-size: 12.5px; font-weight: 700; line-height: 1.35; letter-spacing: -.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.yf-tag { align-self: flex-start; padding: 1px 6px; border-radius: 4px; background: #f2f2f7; font: 700 10px -apple-system, "Apple SD Gothic Neo", sans-serif; font-style: normal; color: #6e6e73; }
+
+/* 상세 조정툴 (빵집 모음의 소개 글 자리) */
+.bt { margin: 8px 0 2px; border-radius: 12px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .07); overflow: hidden; }
+.bt-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; border: 0; background: none; font: inherit; color: #1d1d1f; text-align: left; cursor: pointer; }
+.bt-head b { flex: none; font-size: 13px; font-weight: 800; }
+.bt-sum { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; color: #8e8e93; }
+.bt-tri { flex: none; width: 12px; height: 12px; color: #1d1d1f; transition: transform .2s; }
+.bt.open .bt-tri { transform: rotate(180deg); }
+.bt-body { padding: 2px 12px 12px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #f0f0f2; animation: pxIn .25s cubic-bezier(.2, 1, .3, 1) both; }
+.bt-q p { margin: 10px 0 6px; font-size: 12px; font-weight: 700; color: #3a3a3c; }
+.bt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bt-chip { flex: none; white-space: nowrap; height: 28px; padding: 0 12px; border: 0; border-radius: 99px; background: #f2f2f7; font: 600 12px -apple-system, "Apple SD Gothic Neo", sans-serif; color: #1d1d1f; cursor: pointer; }
+.bt-chip.on { background: #1d1d1f; color: #fff; }
+.bt-lean { display: flex; align-items: center; gap: 8px; }
+.bt-lean span { flex: none; font-size: 10.5px; line-height: 1.25; color: #aeaeb2; text-align: center; font-weight: 600; transition: color .2s; }
+.bt-lean span.on { color: #1d1d1f; }
+.bt-lean input { flex: 1; min-width: 0; accent-color: #1d1d1f; }
+.bt-lean input.idle { opacity: .4; }
+.bt-clear { margin-top: 2px; padding: 0; border: 0; background: none; font: 500 11px -apple-system, sans-serif; color: #0a84ff; cursor: pointer; }
+.bt-checks { display: flex; gap: 14px; }
+.bt-checks label { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #1d1d1f; cursor: pointer; }
+.bt-checks input { width: 15px; height: 15px; margin: 0; accent-color: #1d1d1f; }
+.bt-ok { align-self: flex-end; height: 30px; padding: 0 18px; border: 0; border-radius: 99px; background: #1d1d1f; color: #fff; font: 700 12px -apple-system, "Apple SD Gothic Neo", sans-serif; cursor: pointer; }
+
+/* 빵집 모음: 신문 1면처럼 (1곳 크게 · 4곳 2단 카드 · 나머지 번호 제목) */
+.fp { padding: 10px 22px 40px; display: flex; flex-direction: column; gap: 12px; }
+.fp-none { margin: 12px 0; font-size: 12.5px; color: #8e8e93; }
+.fp [role="link"] { cursor: pointer; }
+.fp-art { position: relative; height: 84px; border-radius: 10px; background: var(--c); display: grid; place-items: center; overflow: hidden; }
+.fp-art.lead { height: 148px; border-radius: 12px; }
+.fp-no { position: absolute; left: 8px; top: 7px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; background: #1d1d1f; color: #fff; font: 800 11px/20px -apple-system, sans-serif; text-align: center; }
+.fp-lead { display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; border-bottom: 1.5px solid #1d1d1f; }
+.fp-kick { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 11.5px; font-weight: 600; color: #8e8e93; }
+.sl .fp-lead h4 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.03em; line-height: 1.2; }
+.fp-lead-txt > p:last-child { margin: 4px 0 0; font-size: 13.5px; line-height: 1.5; color: #3a3a3c; }
+.fp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px; padding-bottom: 12px; border-bottom: .5px solid rgba(0, 0, 0, .15); }
+.fp-card { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sl .fp-card h5 { margin: 4px 0 0; font-size: 14px; font-weight: 800; letter-spacing: -.02em; line-height: 1.25; }
+.fp-where { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin: 0; font-size: 11px; color: #8e8e93; }
+.fp-line { margin: 0; font-size: 12px; line-height: 1.45; color: #3a3a3c; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.fp-more { margin: 0; padding: 0; list-style: none; counter-reset: fp 5; columns: 2; column-gap: 12px; }
+.fp-more li { counter-increment: fp; break-inside: avoid; display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 5px; padding: 7px 0; border-bottom: .5px solid rgba(0, 0, 0, .08); font-size: 12px; }
+.fp-more li::before { content: counter(fp); font: 800 12px -apple-system, sans-serif; color: #c7c7cc; margin-right: 2px; }
+.fp-more b { font-weight: 700; color: #1d1d1f; }
+.fp-more span { font-size: 11px; color: #8e8e93; }
+.fp-more .bp-src { display: none; }
+.fp [role="link"]:hover h4, .fp [role="link"]:hover h5, .fp-more li[role="link"]:hover b { text-decoration: underline; text-underline-offset: 2px; }
+
+/* 누끼 빵: 떠 있는 물건 + 바닥 그림자 + 모노 이름표 (Sam's Stack 느낌) */
+.fp-art { background: none; height: 112px; overflow: visible; }
+.fp-art.lead { height: 176px; background: none; }
+.fp-art::after { content: ""; position: absolute; left: 50%; bottom: 26px; width: 56%; height: 12px; margin-left: -28%; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, .16), transparent); z-index: 0; }
+.fp-obj { position: relative; z-index: 1; max-width: 78%; max-height: 74px; object-fit: contain; filter: drop-shadow(6px 8px 6px rgba(0, 0, 0, .16)); margin-top: -18px; transition: transform .25s cubic-bezier(.2, 1, .3, 1); }
+.fp-art.lead .fp-obj { max-height: 124px; max-width: 70%; margin-top: -22px; }
+.fp-obj.o-baguette { transform: rotate(45deg); max-height: 92px; }
+.fp-art.lead .fp-obj.o-baguette { max-height: 150px; }
+.fp [role="link"]:hover .fp-obj { transform: translateY(-3px); }
+.fp [role="link"]:hover .fp-obj.o-baguette { transform: rotate(45deg) translateX(-3px); }
+.fp-pill { position: absolute; left: 50%; bottom: 0; z-index: 2; transform: translateX(-50%); max-width: 92%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 10px; border-radius: 99px; background: #fbf8f2; box-shadow: inset 0 0 0 1px #1d1d1f; font: 500 11px "SF Mono", Menlo, ui-monospace, monospace; letter-spacing: -.01em; color: #1d1d1f; }
+.fp-art.lead .fp-pill { padding: 4px 13px; font-size: 13px; background: #1d1d1f; color: #fff; }
+.fp-no { z-index: 2; }
+.fp-lead { gap: 6px; }
+.fp-lead-txt > p:last-child { font-size: 14px; color: #1d1d1f; font-weight: 500; }

@@ -11,35 +11,94 @@ export const SOURCES = {
   cnn: { name: 'NBC Palm Springs · CNN', host: 'nbcpalmsprings.com', date: '2026.04.19', color: '#2f6fd6',
     url: 'https://www.nbcpalmsprings.com/ca-us-and-world/2026/04/19/the-baguette-paradox-france-struggles-to-save-its-iconic-bread-as-habits-shift' },
   esq: { name: '에스콰이어 코리아', host: 'esquirekorea.co.kr', date: '2026.03.13', color: '#1d1d1f',
-    url: 'https://www.esquirekorea.co.kr/article/1898604' }
+    url: 'https://www.esquirekorea.co.kr/article/1898604' },
+  // 상세 조정툴용으로 더 모은 곳 (2026-11-21 확인: 각 원문에서 가게 이름 · 구 · 대표 메뉴만)
+  mck: { name: '마리끌레르 코리아', host: 'marieclairekorea.com', date: '2024.04.22', color: '#c2185b',
+    url: 'https://www.marieclairekorea.com/?p=354584' },
+  edit: { name: '디에디트', host: 'the-edit.co.kr', date: '2026.09.23', color: '#2b7a5b',
+    url: 'https://the-edit.co.kr/87688' },
+  pfr: { name: '파리시 (Paris.fr)', host: 'paris.fr', date: '2026.02.26', color: '#25303b',
+    url: 'https://www.paris.fr/pages/la-meilleure-baguette-de-paris-2026-se-deguste-dans-le-14e-arrondissement-34064' },
+  sapc: { name: 'Sortir à Paris', host: 'sortiraparis.com', date: '2026.05.13', color: '#e4572e',
+    url: 'https://www.sortiraparis.com/ko/sosig/palieseo/articles/275647-geulangpalieseo-beoteo-pungmiui-choegang-keuluasang-eun-eodie-iss-eulkka-2026nyeon-sun-wileul-gong-gaehabnida' },
+  lyon: { name: '리옹 관광청', host: 'visiterlyon.com', date: '', color: '#b8322a',
+    url: 'https://en.visiterlyon.com/out-and-about/shopping/gourmet-haunts/pralus-patisserie-chocolaterie-lyon-saint-jean' },
+  gm: { name: 'Gault&Millau', host: 'gaultmillau.com', date: '', color: '#d4a017',
+    url: 'https://fr.gaultmillau.com/en/artisans/pralus-la-boulangerie' },
+  // 니스 · 마르세유 · 몽펠리에 · 보르도 (2026-11-21 확인)
+  gmn: { name: 'Gault&Millau', host: 'gaultmillau.com', date: '', color: '#d4a017', url: 'https://fr.gaultmillau.com/fr/artisans/fournil-zielinska' },
+  azur: { name: '코트다쥐르 관광청', host: 'cotedazurfrance.fr', date: '', color: '#1f7fb8', url: 'https://cotedazurfrance.fr/offres/restaurant-la-femme-du-boulanger-nice-fr-3014791' },
+  mtour: { name: '마르세유 관광청', host: 'marseille-tourisme.com', date: '', color: '#0e5aa7', url: 'https://www.marseille-tourisme.com/offres/le-bar-a-pain-marseille-1er-fr-5268798/' },
+  fooding: { name: 'Le Fooding', host: 'lefooding.com', date: '', color: '#e5322d', url: 'https://lefooding.com/nos-meilleures-adresses/les-meilleures-boulangeries-a-marseille' },
+  bonmtp: { name: 'Le Bonbon Montpellier', host: 'lebonbon.fr', date: '', color: '#ff5a5f', url: 'https://lebonbon.fr/montpellier/good-news/fol-pain-montpellier-meilleure-boulangerie-france-m6/' },
+  gmm: { name: 'Gault&Millau', host: 'gaultmillau.com', date: '', color: '#d4a017', url: 'https://fr.gaultmillau.com/fr/artisans/pain-brut' },
+  herault: { name: '에로 관광청', host: 'herault-tourisme.com', date: '', color: '#2e8b57', url: 'https://www.herault-tourisme.com/fr/fiche/commerces-et-services/des-reves-et-du-pain-montpellier_TFOL6613LAR034V50OAR4/' },
+  frko: { name: '프랑스 관광청 (한국어)', host: 'france.fr', date: '', color: '#1b3f8b', url: 'https://www.france.fr/ko/bordeaux/list/meilleurs-canneles-bordeaux' },
+  gmb: { name: 'Gault&Millau', host: 'gaultmillau.com', date: '', color: '#d4a017', url: 'https://fr.gaultmillau.com/en/artisans/baillardran' },
+  bonbdx: { name: 'Le Bonbon Bordeaux', host: 'lebonbon.fr', date: '2026', color: '#ff5a5f', url: 'https://www.lebonbon.fr/bordeaux/actu/cette-boulangerie-bordeaux-remporte-prix-meilleure-chocolatine-gironde/' },
+  bonbdx2: { name: 'Le Bonbon Bordeaux', host: 'lebonbon.fr', date: '2026', color: '#ff5a5f', url: 'https://lebonbon.fr/bordeaux/actu/boulangerie-bordeaux-decroche-prix-meilleure-galette-frangipane-gironde-2026/' }
 };
+
+// 상세 조정툴의 재료: 프랑스 빵집 모음. 조정한 대로 걸러서 최대 10곳
+//   city  '파리' | '리옹'
+//   k     한국인이 좋아하는 곳(1) ↔ 로컬이 좋아하는 곳(0). 블립의 짐작이 아니라 '어디서 소개됐나'로 정함:
+//         한국 매체 · 한국 셀럽 = 한국인 쪽 / 한국 매체지만 파리지앵이 고른 곳 = 가운데 / 현지 매체 · 현지 대회 = 로컬 쪽
+//   type  'dessert' 디저트류 | 'meal' 식사빵류 | 'both'
+//   img   누끼 딴 빵 사진 (public/demo/bread, 사용자가 준 사진 5장). 가게의 실제 메뉴 사진이 아니라 대표 메뉴 쪽 그림:
+//         크루아상 · 비에누아즈리 → croissant / 바게트 · 빵 → baguette / 에클레어 · 페이스트리 · 스콘 → opera /
+//         타르트 · 슈 · 프랄린 → mousse / 앉아서 먹는 식사 · 샌드위치 → galette
+export const BAKERY_POOL = [
+  { name: '라 파리지엥', img: 'baguette', pin: true, where: '파리 노트르담 근처', city: '파리', k: .95, type: 'meal', line: '2016 · 2025 ‘파리 최고의 바게트’ 우승. 카리나가 파리에 갈 때마다 들르는 집', src: 'esq' },
+  { name: '밀레앙', img: 'croissant', where: '파리', city: '파리', k: .9, type: 'both', line: '한국인 부부의 베이커리 카페. 크루아상 · 바게트 · 타르트 (리사가 찾은 곳)', src: 'esq' },
+  { name: '마미쉬', img: 'mousse', where: '10구', city: '파리', k: .85, type: 'dessert', line: '바닐라 슈와 시나몬 롤', src: 'mck' },
+  { name: '렉토 베르소', img: 'opera', where: '3구 마레', city: '파리', k: .8, type: 'dessert', line: '영국보다 낫다는 스콘', src: 'mck' },
+  { name: '블랑제리 레오니', img: 'croissant', where: '10구', city: '파리', k: .75, type: 'dessert', line: '크루아상. 모든 빵을 직접 만들어요', src: 'mck' },
+  { name: '유니온 블랑제리', img: 'croissant', where: '9구', city: '파리', k: .75, type: 'both', line: '크루아상과 바게트. 쿠키 · 애플파이도', src: 'mck' },
+  { name: '르 블랑제 드 라 투르', img: 'baguette', where: '5구', city: '파리', k: .5, type: 'meal', line: '천연 르뱅으로 오래 발효한 ‘바게트 드 라 투르’ (파리지앵이 고른 곳)', src: 'edit' },
+  { name: '블랑제리 라 파리지엔느', img: 'opera', where: '6구', city: '파리', k: .5, type: 'both', line: '초콜릿 · 커피 에클레어와 바게트 샌드위치 (파리지앵이 고른 곳)', src: 'edit' },
+  { name: '폼포나', img: 'mousse', where: '15구', city: '파리', k: .45, type: 'both', line: '크루아상 · 뺑 오 쇼콜라 · 캄파뉴, 작은 타르트 (파리지앵이 고른 곳)', src: 'edit' },
+  { name: '프랄뤼스', img: 'mousse', where: '리옹 생장', city: '리옹', k: .4, type: 'dessert', line: '분홍 프랄린을 넣은 브리오슈 ‘프랄뤼린’', src: 'lyon' },
+  { name: '쁘띠 일', img: 'croissant', where: '3구', city: '파리', k: .35, type: 'dessert', line: '프랑스-대만식. 대만식 브리오슈', src: 'sap' },
+  { name: '레퀼리브르', img: 'opera', where: '15구', city: '파리', k: .3, type: 'both', line: '궁전 수셰프 출신 제빵사. 사워도우와 페이스트리', src: 'sap' },
+  { name: '룰레스 불레', img: 'galette', where: '3구', city: '파리', k: .28, type: 'both', line: '동네 빵집. 샌드위치와 비에누아즈리', src: 'sap' },
+  { name: '샹불', img: 'galette', where: '18구', city: '파리', k: .25, type: 'meal', line: '몽마르트르. 사워도우, 고대 밀가루 빵', src: 'sap' },
+  { name: '라 모베즈 에르브', img: 'croissant', where: '17구', city: '파리', k: .22, type: 'both', line: '동물성 재료 없는 100% 식물성 빵과 과자', src: 'sap' },
+  { name: '프랄뤼스 라 블랑제리', img: 'baguette', where: '리옹 2구', city: '리옹', k: .2, type: 'meal', line: '100% 유기농 르뱅 빵. 바게트 대신 둥근 미슈', src: 'gm' },
+  { name: '불랑제리 누벨', img: 'baguette', where: '11구', city: '파리', k: .2, type: 'meal', line: '옛 방식 유기농 밀가루 사워도우, 브리오슈', src: 'sap' },
+  { name: '에베일', img: 'baguette', where: '17구', city: '파리', k: .18, type: 'meal', line: '전통 바게트. 좋은 재료에 값이 합리적', src: 'sap' },
+  { name: '미에뜨', img: 'galette', where: '18구', city: '파리', k: .15, type: 'meal', line: '꾸밈없이 재료와 레시피에 집중', src: 'sap' },
+  { name: '푸르닐 디도', img: 'baguette', where: '14구', city: '파리', k: .12, type: 'meal', line: '2026 ‘파리 최고의 바게트’ 그랑프리. 1년간 엘리제궁에 빵을', src: 'pfr' },
+  { name: '블랑제리 뒤 상티에', img: 'croissant', where: '2구', city: '파리', k: .1, type: 'dessert', line: '2026 그랑파리 버터 크루아상 1위', src: 'sapc' },
+  { name: '메종 테브냉', img: 'croissant', where: '6구', city: '파리', k: .1, type: 'dessert', line: '2026 그랑파리 버터 크루아상 3위', src: 'sapc' },
+  // 니스
+  { name: '푸르닐 질린스카', img: 'baguette', where: '니스 쥘 질리 거리', city: '니스', k: .2, type: 'meal', line: 'Gault&Millau에 오른 니스의 빵집', src: 'gmn' },
+  { name: '라 팜 뒤 블랑제', img: 'galette', where: '니스', city: '니스', k: .3, type: 'meal', line: '‘빵집 아내’라는 이름의 식당 · 바', src: 'azur' },
+  // 마르세유
+  { name: '르 바 아 팽', img: 'baguette', where: '마르세유 1구', city: '마르세유', k: .3, type: 'meal', line: '관광청이 소개하는 빵집. 매일 문을 열어요', src: 'mtour' },
+  { name: '불랑제리 T65', img: 'galette', where: '마르세유', city: '마르세유', k: .15, type: 'meal', line: 'Le Fooding이 고른 곳. 르뱅 빵과 푸가스', src: 'fooding' },
+  { name: '페르망 베이커리', img: 'baguette', where: '마르세유', city: '마르세유', k: .15, type: 'meal', line: 'Le Fooding이 고른 곳. 르뱅 빵', src: 'fooding' },
+  // 몽펠리에
+  { name: '폴팽', img: 'baguette', where: '몽펠리에 마리오주 거리', city: '몽펠리에', k: .2, type: 'meal', line: '2025년 12월 문을 연 곳. 유기농 지역 밀가루, 빵을 무게로 팔아요. M6 ‘프랑스 최고의 빵집’ 출연', src: 'bonmtp' },
+  { name: '팽 브뤼', img: 'baguette', where: '몽펠리에 빅토르 위고 대로', city: '몽펠리에', k: .2, type: 'meal', line: 'Gault&Millau에 오른 몽펠리에 빵집', src: 'gmm' },
+  { name: '데 레브 에 뒤 팽', img: 'galette', where: '몽펠리에', city: '몽펠리에', k: .25, type: 'meal', line: '관광청이 ‘개성 있는 빵집’으로 소개. 월요일 휴무', src: 'herault' },
+  // 보르도
+  { name: '바야르랑', img: 'opera', where: '보르도 쿠르 드 랭탕당스', city: '보르도', k: .6, type: 'dessert', line: '‘카눌레의 왕’. 보르도의 카눌레 하면 이 집 (프랑스 관광청 한국어판에도)', src: 'gmb' },
+  { name: '피에르 마티외', img: 'opera', where: '보르도', city: '보르도', k: .55, type: 'dessert', line: '만다린 오리엔탈 파리 셰프 파티시에 출신의 카눌레', src: 'frko' },
+  { name: '그랭', img: 'croissant', where: '보르도 크루아블랑슈', city: '보르도', k: .15, type: 'both', line: '2026 지롱드 최고의 쇼콜라틴. 트라디시옹 바게트도', src: 'bonbdx' },
+  { name: '폴 메리', img: 'croissant', where: '보르도 튀렌 거리', city: '보르도', k: .15, type: 'dessert', line: '2026 지롱드 최고의 갈레트 프랑지판', src: 'bonbdx2' }
+];
 
 const page = (app, p) => [makeLayer('blipweb', { app, ...p })];
 
 const WEB_APPS = () => [
   {
-    id: 'w3', title: '파리 빵집 12곳', by: '블립이 2곳에서 모음', web: true,
-    tags: '프랑스 파리 빵 빵집 베이커리 바게트 사워도우 비에누아즈리 추천 지도 10가지 여행',
+    id: 'w3', title: '프랑스 빵집 10곳', by: '블립이 여러 곳에서 모음', web: true,
+    tags: '프랑스 파리 리옹 빵 빵집 베이커리 바게트 사워도우 비에누아즈리 디저트 추천 지도 10가지 여행',
     layers: page('w3', {
-      bread: 'croissant', title: '파리 빵집 12곳', srcs: ['sap', 'esq'],
-      dek: 'Sortir à Paris의 파리 소식 중 빵집 이야기만, 에스콰이어의 파리 맛집 기사 중 빵집만 골라 모았어요.',
-      filters: ['바게트', '사워도우', '비에누아즈리', '식물성', '앉아서'],
-      sections: [{
-        type: 'rows', rows: [
-          { name: '라 파리지엥', where: '노트르담 근처', line: '2016 · 2025 ‘파리 최고의 바게트’ 우승. 우승 바게트는 1년간 엘리제궁에', tags: ['바게트'], src: 'esq' },
-          { name: '밀레앙', where: '파리', line: '한국인 부부의 베이커리 카페. 크루아상 · 바게트 · 타르트', tags: ['바게트', '비에누아즈리', '앉아서'], src: 'esq' },
-          { name: '샹불', where: '18구', line: '몽마르트르. 사워도우, 고대 밀가루 빵. 앉아서 먹는 메뉴도', tags: ['사워도우', '앉아서'], src: 'sap' },
-          { name: '쁘띠 일', where: '3구', line: '프랑스-대만식. 대만식 브리오슈', tags: ['비에누아즈리'], src: 'sap' },
-          { name: '불랑제리 누벨', where: '11구', line: '옛 방식 유기농 밀가루 사워도우, 브리오슈', tags: ['사워도우'], src: 'sap' },
-          { name: '에베일', where: '17구', line: '전통 바게트. 좋은 재료에 값이 합리적', tags: ['바게트'], src: 'sap' },
-          { name: '미에뜨', where: '18구', line: '꾸밈없이 재료와 레시피에 집중', tags: ['사워도우'], src: 'sap' },
-          { name: '레 꼼므', where: '12구', line: '크로자티에 거리 74번지. 넓은 테라스, 복고풍', tags: ['앉아서'], src: 'sap' },
-          { name: '레퀼리브르', where: '15구', line: '궁전 수셰프 출신 제빵사. 사워도우와 페이스트리', tags: ['사워도우'], src: 'sap' },
-          { name: '곤플레', where: '10구', line: '파리 북역 근처. 메뉴를 새로 디자인한 빵집', tags: [], src: 'sap' },
-          { name: '룰레스 불레', where: '3구', line: '동네 빵집. 샌드위치와 비에누아즈리', tags: ['비에누아즈리'], src: 'sap' },
-          { name: '라 모베즈 에르브', where: '17구', line: '동물성 재료 없는 100% 식물성 빵과 과자', tags: ['식물성'], src: 'sap' }
-        ]
-      }]
+      bread: 'croissant', title: '프랑스 빵집 10곳', srcs: ['sap', 'esq', 'mck', 'edit', 'pfr', 'lyon', 'gm'],
+      // 소개 글 자리에 상세 조정툴 (▼): 프랑스 어디? · 한국인 ↔ 로컬 · 디저트류/식사빵류/모두 → [확인]하면 아래가 바뀜. 모두 고르지 않아도 됨
+      tune: true, pool: true,
+      sections: [{ type: 'rows', rows: [] }]
     })
   },
   {

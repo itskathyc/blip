@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { actionsFor } from './actions';
 
 // 그리는 동안은 드래그한 크기 그대로의 선택 사각형. 놓으면 그 자리에 내용만큼의 작은 판(card, 기존의 1/2 크기)
-export default function BlankRegion({ region, context, onClose, onNewItem, onFill, onSubmit }) {
+export default function BlankRegion({ region, context, onClose, onNewItem, onFill, onText, onSubmit }) {
   const [mode, setMode] = useState(region.startMode || 'icons'); // 우클릭 메뉴에서 '새로 만들기'를 골랐으면 바로 이름 적기
   const [picked, setPicked] = useState(null);
   const [v, setV] = useState('');
@@ -35,6 +35,7 @@ export default function BlankRegion({ region, context, onClose, onNewItem, onFil
                   else if (a.k === 'find') setV(region.subject || ''); // 이 컴포넌트의 이름을 채워 두고, Enter면 찾기
                   else if (a.k === 'drawkit') onNewItem(a.t, region, 'kit'); // 고르면 바로 그 자리에 놓이고, 지울 때까지 남음
                   else if (a.k === 'fill') onFill(region); // 그 빈 장이 블립의 제안 콘텐츠로 채워짐
+                  else if (a.k === 'text') onText(region); // 선언한 빈칸 자리에 바로 글 입력
                   else setPicked(p => (p === a.k ? null : a.k));
                 }}>
                 <img src={a.src} alt="" />

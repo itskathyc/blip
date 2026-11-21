@@ -50,7 +50,8 @@ export default function BlankDeclare({ onSearch, demoAllowed, context, kit }) {
       if (regionRef.current && !t.closest('.rg, .fm') && !onBlank && t.closest(NODRAW)) setRegion(null);
       if (!onBlank && t.closest(NODRAW)) return;
       if (regionRef.current) setRegion(null);
-      drawRef.current = { x: e.clientX, y: e.clientY, on: false };
+      drawRef.current = { x: e.clientX, y: e.clientY, on: false, empty: t.closest('[data-empty]')?.dataset.empty,
+        layer: t.closest('[data-layer]')?.dataset.layer }; // 내 판 위에서 그렸으면 그 장 (Text가 그 장에 글을 넣음) // 빈 장 위에서 그린 빈칸이면 빈 장용 아이콘
     };
     const move = e => {
       const d = drawRef.current;
@@ -67,7 +68,7 @@ export default function BlankDeclare({ onSearch, demoAllowed, context, kit }) {
       drawRef.current = null;
       if (!d || !d.on) return;
       setDrawing(false);
-      setRegion(r => r && { ...settle(r), done: true });
+      setRegion(r => r && { ...settle(r), done: true, ...(d.empty ? { context: 'emptypage', layerId: d.empty } : d.layer ? { layerId: d.layer } : {}) });
       setLearned(true);
       try { localStorage.setItem(LEARN_KEY, '1'); } catch { /* 저장 못 해도 이번 세션 동안은 기억 */ }
     };
@@ -210,6 +211,12 @@ export default function BlankDeclare({ onSearch, demoAllowed, context, kit }) {
       )}
       {region && !region.menu && (
         <BlankRegion region={region} context={context} onClose={() => setRegion(null)} onNewItem={addItem} onFill={fill}
+          onText={r => {
+            const x = r.x + (r.w || 0) / 2, y = r.y + (r.h || 0) / 2;
+            // 내 판의 장 위면 그 장에 글 / 아니면(판을 만들기 전 · 바깥) 오른쪽에 떠 있는 글로
+            dispatchEvent(new CustomEvent(r.layerId ? 'blip:menu' : 'blip:floattext', { detail: { action: 'text', layerId: r.layerId, x, y } }));
+            setRegion(null);
+          }}
           onSubmit={q => { setRegion(null); onSearch(q); }} />
       )}
       <GhostDemo enabled={demoAllowed && !learned && !region && !drawing} />

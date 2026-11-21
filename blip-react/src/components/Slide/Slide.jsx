@@ -7,6 +7,7 @@ import Shape, { LINE_KINDS } from '../Edit/Shape';
 import BlipWeb from './BlipWeb';
 import Reader from './Reader';
 import { Videos, Coupang, Quiz } from './Duo';
+import YtFeed from './YtFeed';
 import MiniMap from '../Map/MiniMap';
 import MapChat from '../Map/MapChat';
 import './Slide.css';
@@ -68,7 +69,7 @@ export function Piece({ p, styles, sel, wiggle }) {
         : p.kind === 'img' ? <Bread kind={breadFor(p.bread)} size={110} />
         // 빈칸에서 선언한 새 아이템: 선언한 빈칸의 자리·크기 그대로 굳은 상자 (두 번 탭으로 이름 고치기)
         // 채우기 칸: 아직 비활성(반투명). 모양에 맞는 자리표시(글줄·그림·목록), 두 번 탭해 쓰는 순간 선명
-        : p.kind === 'map' ? <MiniMap key={p.merge?.at || 0} cfg={p.cfg} merge={p.merge} name={p.text} />
+        : p.kind === 'map' ? <MiniMap cfg={p.cfg} pins={p.pins} miss={p.miss} merge={p.merge} name={p.text} />
         : p.kind === 'item' ? <span className="pc-item-box" style={{ width: p.w, height: p.h }}><b aria-hidden="true">{p.text?.[0]}</b><em data-ptext>{p.text}</em></span>
         : <span>{p.text}</span>}
       {p.from && <i className="pc-from" data-from={p.from.id} title={'‘' + p.from.title + '’에서'} />}
@@ -267,6 +268,9 @@ export default function Slide({ layer, interactive = false, tear = false, sel = 
         {layer.bread && <div className="ar-img" style={{ background: layer.tint }} {...tr('img', 'img', { 'data-bread': layer.bread })}><Bread kind={layer.bread} size={104} /></div>}
         {layer.paras.map((x, i) => t('p' + i, x, 'p', 'ar-p'))}
       </>);
+    // ---------- AI안경 이슈 몰아보기 (data/aiglass.js) ----------
+    case 'ytfeed':
+      return root('flush duo', '#f5f5f7', <YtFeed layer={layer} play={play} tr={tr} />);
     // ---------- 아이폰 듀오 살까말까 (data/duo.js) ----------
     case 'videos':
       return root('flush duo', '#f5f5f7', <Videos layer={layer} play={play} tr={tr} />);

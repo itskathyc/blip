@@ -33,6 +33,15 @@ export default function FigmaMenu({ region, onClose, onPick, onSubmit }) {
   const run = action => { dispatchEvent(new CustomEvent('blip:menu', { detail: { action, ...m } })); onClose(); };
   return (
     <div className="fm" style={{ left: region.x, top: region.y }} onContextMenu={e => e.preventDefault()}>
+      {/* 지도 아이템 위 우클릭: 맨 위 추천 = 지도 상세 설계 (왼쪽에서 설계 대화가 시작됨). 그 아래는 기본 메뉴 */}
+      {m.piece && m.kind === 'item' && /지도/.test(m.name || '') && (
+        <ul className="fm-list fm-top" role="menu">
+          <li role="menuitem" className="fm-blip" onClick={() => { dispatchEvent(new CustomEvent('blip:mapdesign', { detail: { layerId: m.layerId, piece: m.piece, name: m.name } })); onClose(); }}>
+            <span>지도 상세 설계</span><kbd>Blip</kbd>
+          </li>
+          <li className="fm-sep" role="separator" />
+        </ul>
+      )}
       {/* 문단 위 우클릭: 맨 위에 그 문단에 맞춘 블립 추천 → 고르면 문단 아래에 컴포넌트가 생김 */}
       {m.asks && (
         <ul className="fm-list fm-top" role="menu">
@@ -46,20 +55,13 @@ export default function FigmaMenu({ region, onClose, onPick, onSubmit }) {
       )}
       <div className="fm-ics">
         {/* 끼워 넣은 글 칸 위에선 맨 앞이 텍스트 에디터 */}
-        {[...(m.ins ? [TEXTED] : []), ...actionsFor(region.context).map(a => (a.k === 'new' ? TEXT : a))].slice(0, 4).map(a => ( /* 우클릭에선 NEW 대신 텍스트 입력 */
+        {[...(m.ins ? [TEXTED] : []), ...actionsFor(region.context).map(a => (a.k === 'new' ? TEXT : a))].filter((a, i, all) => all.findIndex(b => b.k === a.k) === i).slice(0, 4).map(a => ( /* 우클릭에선 NEW 대신 텍스트 입력 */
           <button key={a.k} className="fm-ic" title={a.t} onClick={() => onPick(a)}><img src={a.src} alt="" /></button>
         ))}
       </div>
       <input className="fm-in" autoFocus placeholder="검색" value={v} onChange={e => setV(e.target.value)} spellCheck="false"
         onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && v.trim()) { e.preventDefault(); onSubmit(v.trim()); } if (e.key === 'Escape') onClose(); }} />
       <ul className="fm-list" role="menu">
-        {/* 지도 아이템 위에서: 블립과 같이 설계하기 (왼쪽에서 대화가 시작됨) */}
-        {m.piece && m.kind === 'item' && /지도/.test(m.name || '') && (<>
-          <li role="menuitem" className="fm-blip" onClick={() => { dispatchEvent(new CustomEvent('blip:mapdesign', { detail: { layerId: m.layerId, piece: m.piece, name: m.name } })); onClose(); }}>
-            <span>{m.name}설계</span><kbd>Blip</kbd>
-          </li>
-          <li className="fm-sep" role="separator" />
-        </>)}
         {ITEMS.map((it, i) => (it === '-'
           ? <li key={'s' + i} className="fm-sep" role="separator" />
           : (

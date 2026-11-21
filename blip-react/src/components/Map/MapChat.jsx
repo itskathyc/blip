@@ -1,11 +1,14 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import MiniMap from './MiniMap';
-import { CELEB_BAKERIES } from '../../data/celebMap';
+import { CELEB_BAKERIES, isCeleb } from '../../data/celebMap';
 import './Map.css';
 
-// 오른쪽 아이템(예: '프랑스 지도')을 우클릭 → '프랑스 지도설계' → 왼쪽에서 이 대화가 시작됨.
+// 오른쪽 아이템(예: '프랑스 지도')을 우클릭 → '지도 상세 설계' → 왼쪽에서 이 대화가 시작됨.
 // 한 번에 한 질문만. 답해야 다음이 나오고, 다 답하면 그때 지도를 그림 (중간에 결과를 미리 보여주지 않음)
 const ASK = [
+  { key: 'app', text: '어떤 지도 앱으로 연결할까요?\n핀을 누르면 이 앱에서 열려요.',
+    opts: [['google', '구글맵'], ['naver', '네이버지도'], ['kakao', '카카오맵'], ['apple', '애플 지도']],
+    words: { google: /구글|google/i, naver: /네이버|naver/i, kakao: /카카오|kakao/i, apple: /애플|apple/i } },
   { key: 'style', text: '지도의 디자인을 골라주세요.', pv: true,
     opts: [['line', '선'], ['paper', '종이'], ['night', '밤']], words: { line: /선|라인|심플/, paper: /종이|따뜻|빈티지/, night: /밤|다크|어두/ } },
   { key: 'region', text: '프랑스 전역을 가져올까요?\n특정 지역을 생각하시나요?',
@@ -31,6 +34,7 @@ addEventListener('blip:mapmerge', e => {
   const { map, name } = e.detail;
   for (const [id, c] of store) {
     if (c.piece !== map) continue;
+    if (!isCeleb(name)) continue; // 가게 하나를 던진 건 지도 위에서 바로 보임 (대화는 조용히)
     say(id, { who: 'blip', text: `‘${name}’${eul(name)} 지도에 합치는 중`, work: true }, 200);
     const found = CELEB_BAKERIES.filter(b => b.lat), miss = CELEB_BAKERIES.filter(b => !b.lat);
     setTimeout(() => set(id, c2 => ({ ...c2, msgs: c2.msgs.filter(m => !m.work) })), 1700);

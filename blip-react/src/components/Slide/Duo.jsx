@@ -66,18 +66,49 @@ function ParaExt({ ext, setExt }) {
   // 다 쓴 뒤 아래 입력창: 다시 부탁하거나(짧게 · 목록으로) 내 말을 이어 붙임. 저장 = 칸이 걷히고 본문 문단이 됨
   const [more, setMore] = useState('');
   const sentences = t => t.split(/(?<=[.!?요다])\s+/).filter(Boolean);
+  // 블립이 다 쓰고 나면 그 글 끝에서 커서가 깜빡임 → 이어서 내가 바로 쓰고 고칠 수 있음 (저장하면 내가 쓴 그대로)
+  const textEl = useRef(null);
+  const readDom = () => {
+    const el = textEl.current;
+    if (!el) return { text: ext.text, items: ext.items };
+    if (ext.list) {
+      const items = [...el.querySelectorAll('li')].map(li => li.innerText.trim()).filter(Boolean);
+      return { items, text: items.join(' ') };
+    }
+    return { text: el.innerText.replace(/\n+$/, '').trim(), items: null };
+  };
   const refine = () => {
     const q = more.trim();
     if (!q) return;
     setMore('');
-    const cur = ext.text;
-    if (/짧게|요약|줄여/.test(q)) { setExt(x => ({ ...x, text: sentences(cur)[0], list: false })); setTyped(0); return; }
-    if (/불릿|글머리|목록|리스트|나눠|줄마다|항목|bullet/i.test(q)) { setExt(x => ({ ...x, list: true, relist: (x.relist || 0) + 1 })); return; } // 다시 적기: 한 줄씩 차례로
-    if (/문장|이어/.test(q) && ext.list) { setExt(x => ({ ...x, list: false })); return; }
-    setTyped(cur.length + 1); // 내 말은 이어서 한 글자씩
-    setExt(x => ({ ...x, text: cur + ' ' + q }));
+    const { text: cur, items } = readDom(); // 내가 커서로 고친 것까지
+    const ver = (ext.ver || 0) + 1;
+    if (/짧게|요약|줄여/.test(q)) { setExt(x => ({ ...x, text: sentences(cur)[0], items: null, list: false, ver })); setTyped(0); return; }
+    if (/불릿|글머리|목록|리스트|나눠|줄마다|항목|bullet/i.test(q)) { setExt(x => ({ ...x, text: cur, items: ext.list ? items : sentences(cur), list: true, relist: (x.relist || 0) + 1, ver })); return; } // 다시 적기: 한 줄씩 차례로
+    if (/문장|이어/.test(q) && ext.list) { setExt(x => ({ ...x, text: cur, items: null, list: false, ver })); setTyped(cur.length); return; }
+    setTyped(cur.length + 1); // 부탁이 아닌 말은 이어서 한 글자씩
+    setExt(x => ({ ...x, text: cur + ' ' + q, items: null, list: false, ver }));
   };
+  const save = () => { const d = readDom(); setExt(x => ({ ...x, ...d, phase: 'saved', ver: (x.ver || 0) + 1 })); };
   const typing = ext.phase === 'write' && typed < (ext.text || '').length;
+  const editable = ext.phase === 'write' && !typing;
+  useEffect(() => {
+    if (!editable) return undefined;
+    // 불릿으로 다시 적을 땐 줄이 차례로 다 나온 뒤에
+    const t = setTimeout(() => {
+      const el = textEl.current;
+      if (!el) return;
+      const end = ext.list ? el.querySelector('li:last-child') || el : el;
+      el.focus({ preventScroll: true });
+      const r = document.createRange(); r.selectNodeContents(end); r.collapse(false);
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    }, ext.list ? (ext.items?.length || 3) * 180 + 200 : 0);
+    return () => clearTimeout(t);
+  }, [editable, ext.list, ext.relist, ext.ver, ext.items?.length]);
+  const editProps = editable ? {
+    ref: textEl, contentEditable: true, suppressContentEditableWarning: true, spellCheck: false,
+    onKeyDown: e => { if (e.key === 'Escape') e.currentTarget.blur(); }
+  } : { ref: textEl };
   return (
     <div className={'px px-' + ext.phase} onPointerDown={e => e.stopPropagation()}>
       {ext.phase !== 'saved' && <p className="px-tag"><b>{ext.q}</b>{ext.phase === 'size' && <span>약 {n}줄</span>}{ext.from && ext.phase === 'write' && <span>{ext.from}</span>}
@@ -97,8 +128,8 @@ function ParaExt({ ext, setExt }) {
           </div>
         )}
         {(ext.phase === 'fit' || ext.phase === 'write' || ext.phase === 'saved') && (ext.list && !typing
-          ? <ul className="px-list" key={ext.relist}>{sentences(ext.text).map((x, i) => <li key={x} style={{ '--i': i }}>{x}</li>)}</ul>
-          : <p className="px-text">{ext.phase === 'fit' ? '' : ext.text.slice(0, typed)}{typing && <i className="px-caret" />}</p>
+          ? <ul className="px-list" key={'l' + ext.relist + ':' + (ext.ver || 0)} {...editProps}>{(ext.items || sentences(ext.text)).map((x, i) => <li key={i} style={{ '--i': i }}>{x}</li>)}</ul>
+          : <p className="px-text" key={'t' + (ext.ver || 0) + (editable ? 'e' : '')} {...editProps}>{ext.phase === 'fit' ? '' : ext.phase === 'saved' ? ext.text : ext.text.slice(0, typed)}{typing && <i className="px-caret" />}</p>
         )}
         <p className="px-text px-meas" ref={meas} aria-hidden="true" />
       </div>
@@ -112,7 +143,7 @@ function ParaExt({ ext, setExt }) {
           <button className="px-enter" onClick={refine} disabled={!more.trim()} aria-label="보내기" title="보내기 (Enter)">
             <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M13 3v5.5a1.5 1.5 0 0 1-1.5 1.5H4M7 6.5L3.5 10 7 13.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
-          <button className="px-save" onClick={() => setExt(x => ({ ...x, phase: 'saved' }))}>저장</button>
+          <button className="px-save" onMouseDown={e => e.preventDefault()} onClick={save}>저장</button>
         </div>
       )}
 
@@ -152,7 +183,9 @@ export function Videos({ layer, play, tr }) {
     const ask = e => {
       const q = e.detail.q.replace(/\s+/g, ' ');
       if (/영상/.test(q) && /(다시|도 |도$|보여|켜|띄워|살려)/.test(q) && !/(빼|없이|숨|제거|지워|만)/.test(q)) { e.preventDefault(); setNoVid(false); return; }
-      if (/(댓글|제목)\s*(이랑|과|와|하고)?\s*(댓글)?\s*만/.test(q) || (/영상/.test(q) && /(빼|없이|숨|제거|지워|치워)/.test(q))) { e.preventDefault(); setNoVid(true); setCmf(null); return; }
+      // 댓글 거르기(누가 답한 · 대댓글 · 답글 달린)가 먼저 — "주연이 대댓글 단 댓글만"은 영상 빼기가 아님
+      const filtering = /대댓글|답글|답한|답 단|리플|크리에이터|본인|주인/.test(q) || q.includes(cur.ch.split(' ')[0]);
+      if (!filtering && (/(댓글|제목)\s*(이랑|과|와|하고)?\s*(댓글)?\s*만/.test(q) || (/영상/.test(q) && /(빼|없이|숨|제거|지워|치워)/.test(q)))) { e.preventDefault(); setNoVid(true); setCmf(null); return; }
       if (!/댓글|답글|답한|답 단|리플/.test(q)) return;
       e.preventDefault(); // 검색이 아니라 이 콘텐츠의 댓글 거르기
       const name = cur.ch.split(' ')[0];
@@ -297,10 +330,10 @@ export function Videos({ layer, play, tr }) {
   );
 }
 
-// 쿠팡 별점. 우클릭 → "후기까지 같이보기" → 별점 아래 후기 5개로 화면이 다시 짜임 → 더보기로 10개까지
+// 쿠팡 별점 + 바로 아래 후기 5개 (처음부터). 더보기로 전부 · 우클릭 → 후기 접기 / 후기까지 같이보기
 export function Coupang({ play, tr }) {
   const [menu, setMenu] = useState(null); // 우클릭한 자리
-  const [n, setN] = useState(0); // 보여 주는 후기 수 (0 = 별점만)
+  const [n, setN] = useState(5); // 보여 주는 후기 수 — 처음부터 별점 아래 5개 (0 = 별점만, 우클릭 → 후기 접기)
   const c = COUPANG;
   const stars = k => '★★★★★'.slice(0, k) + '☆☆☆☆☆'.slice(0, 5 - k);
   const ctx = play ? {
@@ -348,7 +381,7 @@ export function Coupang({ play, tr }) {
       )}
       {menu && (
         <div className="cp-menu" style={{ left: menu.x, top: menu.y }}>
-          <button onClick={() => { setN(5); setMenu(null); }}>{n ? '후기 접기' : '후기까지 같이보기'}</button>
+          <button onClick={() => { setN(v => (v ? 0 : 5)); setMenu(null); }}>{n ? '후기 접기' : '후기까지 같이보기'}</button>
         </div>
       )}
     </div>

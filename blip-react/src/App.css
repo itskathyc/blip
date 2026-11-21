@@ -154,14 +154,14 @@
 
 /* ---------- 검색 결과: 새 창 3개가 동시에 열렸다가 자리를 잡음 ---------- */
 .dig .stage { position: relative; }
-.burst { position: absolute; inset: 0; z-index: 5; pointer-events: none; animation: burstBg 1.5s ease both; }
+.burst { position: absolute; inset: 0; z-index: 5; pointer-events: none; animation: burstBg .75s ease both; /* 2배 빠르게 (2026-11-21) */ }
 @keyframes burstBg { 0% { background: rgba(247, 246, 242, 0); } 15%, 70% { background: rgba(247, 246, 242, .92); } 100% { background: rgba(247, 246, 242, 0); } }
 .bw { position: absolute; left: 50%; top: 46%; width: 195px; height: 244px; margin: -122px 0 0 -97px; border-radius: 12px; overflow: hidden; background: #fff;
   box-shadow: 0 0 0 .5px rgba(0, 0, 0, .12), 0 20px 50px rgba(0, 0, 0, .18); }
 .bw-in { position: absolute; left: 0; top: 0; transform: scale(.5); transform-origin: top left; }
-.bw0 { --x: -150px; --r: -4deg; animation: bwOpen .5s cubic-bezier(.2, 1.2, .3, 1) both, bwMain .45s .95s cubic-bezier(.4, 0, .2, 1) forwards; }
-.bw1 { --x: 0px; --r: 0deg; animation: bwOpen .5s .12s cubic-bezier(.2, 1.2, .3, 1) both, bwDown .45s 1s cubic-bezier(.4, 0, .2, 1) forwards; }
-.bw2 { --x: 150px; --r: 4deg; animation: bwOpen .5s .24s cubic-bezier(.2, 1.2, .3, 1) both, bwDown .45s 1.05s cubic-bezier(.4, 0, .2, 1) forwards; }
+.bw0 { --x: -150px; --r: -4deg; animation: bwOpen .25s cubic-bezier(.2, 1.2, .3, 1) both, bwMain .225s .475s cubic-bezier(.4, 0, .2, 1) forwards; }
+.bw1 { --x: 0px; --r: 0deg; animation: bwOpen .25s .06s cubic-bezier(.2, 1.2, .3, 1) both, bwDown .225s .5s cubic-bezier(.4, 0, .2, 1) forwards; }
+.bw2 { --x: 150px; --r: 4deg; animation: bwOpen .25s .12s cubic-bezier(.2, 1.2, .3, 1) both, bwDown .225s .525s cubic-bezier(.4, 0, .2, 1) forwards; }
 @keyframes bwOpen { from { opacity: 0; transform: translate(0, 30px) scale(.6); } to { opacity: 1; transform: translate(var(--x), 0) rotate(var(--r)); } }
 @keyframes bwMain { from { opacity: 1; transform: translate(var(--x), 0) rotate(var(--r)); } to { opacity: 0; transform: translate(0, 0) scale(2.1); } }
 @keyframes bwDown { from { opacity: 1; transform: translate(var(--x), 0) rotate(var(--r)); } to { opacity: 0; transform: translate(calc(var(--x) * .3), 340px) scale(.3); } }
@@ -221,3 +221,4 @@ body.text-armed ::selection { background: #0a84ff; color: #fff; }
 .pub-menu b { font-size: 13px; font-weight: 600; }
 .pub-menu span { font-size: 11px; color: var(--mute); }
 @keyframes pubIn { from { opacity: 0; transform: translateY(-4px); } }
+.pub-sep { display: block; height: 1px; margin: 4px 6px; background: rgba(0, 0, 0, .08); }

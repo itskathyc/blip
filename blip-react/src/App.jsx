@@ -9,6 +9,7 @@ import ImportModal from './components/Import/ImportModal';
 import GptPanel from './components/Gpt/GptPanel';
 import { KIT_COLORS } from './components/BlankDeclare/kit';
 import { BREADS } from './data/breads';
+import { AIG_APP } from './data/aiglass';
 import { seedApps, makeNewBoard, makeLayer, NEXT_KIND, matchScore } from './data/apps';
 import { WEB, MENU_COLOR } from './data/web';
 import { PRIMARY, PRIMARY_LABEL, matchUrls } from './data/blog';
@@ -23,6 +24,8 @@ import BlipHistory from './components/BlipHistory/BlipHistory';
 import Stash from './components/Stash/Stash';
 import TextThrow from './components/Edit/TextThrow';
 import { TRIP, TRIP_NEXT, DAIN_TASTE, detailApp } from './data/trip';
+import { CELEB_BAKERIES, isCeleb } from './data/celebMap';
+import { findPlace } from './components/Map/places';
 import './App.css';
 
 const webBoard = w => ({ id: 'web:' + w.t, title: w.t, mine: false, color: MENU_COLOR[w.m], layers: [{ id: 'web:' + w.t, kind: 'web', w }] });
@@ -760,6 +763,42 @@ export default function App({ variant, handMode = false }) {
     setSel(null); setPieceWiggle(null); setTool('move');
     setSaved(Date.now());
   };
+  // 빈칸 선언 → Text (판의 장이 아닌 곳): 오른쪽에 떠 있는 글을 놓고 바로 쓰기 (Enter = 끝)
+  useEffect(() => {
+    const on = e => {
+      const pane = document.querySelector('.pane.edit')?.getBoundingClientRect();
+      if (!pane) return;
+      const inside = e.detail.x >= pane.left && e.detail.x <= pane.right && e.detail.y >= pane.top && e.detail.y <= pane.bottom;
+      const x = inside ? e.detail.x - pane.left : pane.width / 2, y = inside ? e.detail.y - pane.top : pane.height / 2;
+      const id = 'f' + Date.now();
+      setFloats(fs => [...fs, { id, piece: { kind: 'note', text: '텍스트', scale: 1 }, x, y }]);
+      setTimeout(() => {
+        const el = document.querySelector(`.floats [data-piece="${id}"] [data-ptext]`);
+        if (!el) return;
+        el.contentEditable = 'true'; el.focus();
+        const r = document.createRange(); r.selectNodeContents(el);
+        const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        const key = ev => { if (ev.key === 'Escape' || (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing)) { ev.preventDefault(); el.blur(); } };
+        el.addEventListener('keydown', key);
+        el.addEventListener('blur', () => {
+          el.removeEventListener('keydown', key); el.contentEditable = 'false';
+          const text = el.innerText.replace(/\n+$/, '') || '텍스트';
+          setFloats(fs => fs.map(f => (f.id === id ? { ...f, piece: { ...f.piece, text } } : f)));
+        }, { once: true });
+      }, 60);
+    };
+    addEventListener('blip:floattext', on);
+    return () => removeEventListener('blip:floattext', on);
+  }, []);
+
+  // Create New: 지금 판은 그대로 두고, 제목 없는 새 판을 열기 (+ 하나로 시작 — "어떤 콘텐츠를 만드실건가요?")
+  const createNew = () => {
+    const nb = makeNewBoard();
+    setApps(list => [nb, ...list]);
+    setProjectId(nb.id);
+    setIndex(0); setSel(null); setPieceWiggle(null); setTool('move');
+    setFresh([]);
+  };
   const [pubOpen, setPubOpen] = useState(false);
   useEffect(() => {
     if (!pubOpen) return undefined;
@@ -787,6 +826,15 @@ export default function App({ variant, handMode = false }) {
   const swiping = useRef(false);
   const stepContent = dir => {
     const k = Math.max(0, path.length - 1);
+    // A: 첫 슬라이더의 마지막(나만의 빵집지도)에서 위아래로 끌면 = 새 콘텐츠 'AI안경 이슈 몰아보기'가 그 뒤에 생김 (한 번만)
+    if (A && !swiping.current && currentKey === feed[feed.length - 1] && !feed.includes('app:aig')) {
+      if (!apps.some(a => a.id === 'aig')) setApps(list => [...list, AIG_APP()]);
+      swiping.current = true;
+      deriveNext('app:aig');
+      setSwipe({ dir, phase: 'in' });
+      setTimeout(() => { setSwipe(null); swiping.current = false; }, 380);
+      return;
+    }
     // A: 위에서 아래로 끌어내리기 = 새 콘텐츠 하나 (+ 와 같음, 지금 보던 것 바로 옆에). 위로 밀기 = 다음 것
     if (A && dir < 0) {
       if (swiping.current) return;
@@ -955,21 +1003,49 @@ export default function App({ variant, handMode = false }) {
       const { layerId, piece, name } = e.detail;
       const id = 'map-' + piece;
       if (!apps.some(a => a.id === id)) {
-        setApps(list => [...list, { id, title: name + '설계', by: 'Blip', mine: false, detail: true, layers: [makeLayer('mapchat', { app: id, name, layerId, piece })] }]);
+        setApps(list => [...list, { id, title: name + ' 상세 설계', by: 'Blip', mine: false, detail: true, layers: [makeLayer('mapchat', { app: id, name, layerId, piece })] }]);
       }
       deriveNext('app:' + id);
       setBurst({ id: Date.now(), keys: ['app:' + id] });
     };
     const done = e => {
       const { layerId, piece, cfg } = e.detail;
-      updateLayer(layerId, l => ({ ...l, pieces: (l.pieces || []).map(p => (p.id === piece ? { ...p, kind: 'map', cfg, min: false, x: 195, y: 244, scale: 1 } : p)) }));
+      updateLayer(layerId, l => ({ ...l, pieces: (l.pieces || []).map(p => (p.id === piece ? { ...p, kind: 'map', cfg, pins: p.pins || [], miss: p.miss || [], min: false, x: 195, y: 244, scale: 1 } : p)) }));
     };
     const merge = e => {
-      const { layerId, map, item, name } = e.detail;
-      updateLayer(layerId, l => ({ ...l, pieces: (l.pieces || []).filter(p => p.id !== item).map(p => (p.id === map ? { ...p, merge: { name, at: Date.now() } } : p)) }));
+      const { layerId, map, item, name, x, y } = e.detail;
+      // 지도에 던진 아이템 → 📍
+      //   셀럽 인증 빵집(묶음): 위치를 아는 곳은 📍가 하나씩, 모르는 곳은 '못 찾았어요' (이미 꽂힌 곳은 그대로)
+      //   그 밖: 블립이 모아 둔 곳이면 그 위치에, 아니면 놓은 자리에 내 메모 핀
+      const now = Date.now();
+      const g = document.querySelector(`.pane.edit .stage [data-piece="${map}"] .mm-geo`)?.getBoundingClientRect();
+      const drop = g && x != null ? { fx: Math.min(1, Math.max(0, (x - g.left) / g.width)), fy: Math.min(1, Math.max(0, (y - g.top) / g.height)) } : { fx: .5, fy: .5 };
+      updateLayer(layerId, l => ({ ...l, pieces: (l.pieces || []).filter(p => p.id !== item).map(p => {
+        if (p.id !== map) return p;
+        const has = new Set((p.pins || []).map(q => q.name));
+        if (!isCeleb(name)) {
+          const f = findPlace(name, p.cfg?.region);
+          const one = f && !f.outside ? { ...f, id: 'pin' + now, at: now, m: 1, i: 0 } : { id: 'pin' + now, note: name, ...drop, at: now, m: 1, i: 0 };
+          return { ...p, merge: { name, at: now }, pins: [...(p.pins || []), one] };
+        }
+        const add = CELEB_BAKERIES.filter(b => b.lat && !has.has(b.name)).map((b, i) => ({ id: 'pin' + now + i, name: b.name, who: b.who, where: b.where, city: '파리', lat: b.lat, lon: b.lon, at: now, m: 1, i }));
+        const miss = CELEB_BAKERIES.filter(b => !b.lat && !(p.miss || []).some(q => q.name === b.name)).map(b => ({ name: b.name, who: b.who }));
+        return { ...p, merge: { name, at: now }, pins: [...(p.pins || []), ...add], miss: [...(p.miss || []), ...miss] };
+      }) }));
     };
-    addEventListener('blip:unpin', unpin); addEventListener('blip:mapdesign', design); addEventListener('blip:mapdone', done); addEventListener('blip:mapmerge', merge);
-    return () => { removeEventListener('blip:unpin', unpin); removeEventListener('blip:mapdesign', design); removeEventListener('blip:mapdone', done); removeEventListener('blip:mapmerge', merge); };
+    // 지도 위 📍: 직접 찍기(add) · 옮기기/이름(set) · 빼기(del)
+    const pin = e => {
+      const { layerId, map, op, pin: q } = e.detail;
+      updateLayer(layerId, l => ({ ...l, pieces: (l.pieces || []).map(p => {
+        if (p.id !== map) return p;
+        const pins = p.pins || [];
+        if (op === 'add') return { ...p, pins: [...pins, q] };
+        if (op === 'del') return { ...p, pins: pins.filter(x => x.id !== q.id) };
+        return { ...p, pins: pins.map(x => (x.id === q.id ? { ...x, ...q } : x)) };
+      }) }));
+    };
+    addEventListener('blip:unpin', unpin); addEventListener('blip:mapdesign', design); addEventListener('blip:mapdone', done); addEventListener('blip:mapmerge', merge); addEventListener('blip:mappin', pin);
+    return () => { removeEventListener('blip:unpin', unpin); removeEventListener('blip:mapdesign', design); removeEventListener('blip:mapdone', done); removeEventListener('blip:mapmerge', merge); removeEventListener('blip:mappin', pin); };
   });
   const askA = q => {
     // 지금 열린 콘텐츠가 그 말을 직접 받으면(예: 댓글 거르기) 검색하지 않고 거기서 처리
@@ -1136,6 +1212,8 @@ export default function App({ variant, handMode = false }) {
                 <div className="pub-menu" role="menu">
                   <button role="menuitem" onClick={() => { setPubOpen(false); commit(); }}><b>Commit</b><span>지금 판을 저장</span></button>
                   <button role="menuitem" onClick={() => { setPubOpen(false); share(); }}><b>Publish</b><span>확정하고 링크 복사</span></button>
+                  <i className="pub-sep" role="separator" />
+                  <button role="menuitem" onClick={() => { setPubOpen(false); createNew(); }}><b>Create New</b><span>새 판 열기</span></button>
                 </div>
               )}
             </div>

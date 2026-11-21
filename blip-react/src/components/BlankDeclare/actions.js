@@ -9,7 +9,7 @@ const NEW = { k: 'new', t: '새로운 아이템선언', s: '새로 만들기', s
 
 // 텍스트 입력 아이콘 (T): 우클릭한 그 자리에 글을 바로 씀 — 오른쪽 콘텐츠의 우클릭 메뉴에서 NEW 대신
 const TEXT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#f2f2f7"/><path d="M30 30h40M50 30v42" stroke="#1d1d1f" stroke-width="9" stroke-linecap="round"/><path d="M62 70h12" stroke="#0a84ff" stroke-width="5" stroke-linecap="round"/></svg>`;
-export const TEXT = { k: 'text', t: '텍스트 입력', s: '텍스트', src: 'data:image/svg+xml,' + encodeURIComponent(TEXT_SVG) };
+export const TEXT = { k: 'text', t: '텍스트 입력', s: 'Text', src: 'data:image/svg+xml,' + encodeURIComponent(TEXT_SVG) };
 
 // 텍스트 에디터 아이콘 (Aa + 줄): 끼워 넣은 글 칸을 우클릭하면 맨 앞에 — 글꼴 · 정렬 · 크기 · 색
 const TEXTED_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#e8f1ff"/><path d="M22 66l13-34 13 34M27 54h16" stroke="#0a5cc2" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M58 40h22M58 53h22M58 66h14" stroke="#0a84ff" stroke-width="7" stroke-linecap="round"/></svg>`;
@@ -17,7 +17,7 @@ export const TEXTED = { k: 'texteditor', t: '텍스트 에디터', s: '에디터
 
 export const ACTIONS = [
   NEW,
-  { k: 'claude', t: 'Claude', src: icon('ic-claude.png') },
+  TEXT, // 어디에 그린 빈칸이든 Claude 대신 텍스트 입력 (2026-11-21 사용자 요청)
   { k: 'kakao', t: '카카오톡', src: icon('ic-kakao.png') },
   { k: 'excel', t: 'Excel', src: icon('ic-excel.png') }
 ];
@@ -26,7 +26,7 @@ export const ACTIONS = [
 const EDIT = [
   NEW,
   { k: 'drawkit', t: '드로잉키트', src: KIT_SRC },
-  { k: 'claude', t: 'Claude', src: icon('ic-claude.png') },
+  TEXT, // 내 판 위에 그린 빈칸에서도 Claude 대신 텍스트 입력 (빈 장과 같게)
   { k: 'kakao', t: '카카오톡', src: icon('ic-kakao.png') }
 ];
 
@@ -38,7 +38,7 @@ const EMPTY_PAGE = [
   { k: 'fill', t: '채우기', src: 'data:image/svg+xml,' + encodeURIComponent(FILL_SVG) },
   NEW,
   { k: 'drawkit', t: '드로잉키트', src: KIT_SRC },
-  { k: 'claude', t: 'Claude', src: icon('ic-claude.png') }
+  TEXT // 빈 장에선 Claude 대신 텍스트 입력: 그 자리에 바로 글을 씀
 ];
 
 export const actionsFor = context => (context === 'emptypage' ? EMPTY_PAGE : context === 'edit' ? EDIT : context === 'component' ? COMPONENT : ACTIONS);
