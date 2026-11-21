@@ -1,0 +1,93 @@
+.shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 아래 = 화면 둘: 왼쪽 디깅(보기), 오른쪽 편집(내 판) */
+.work {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.pane {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px 12px;
+}
+
+.dig { padding-top: 64px; background: var(--sand-2); border-right: 1px solid #f0eee9; } /* 오른쪽 제목 줄만큼 내려서 두 화면 높이를 맞춤 */
+
+.view-empty {
+  width: calc(var(--view-w) * 1px);
+  height: calc(var(--view-h) * 1px);
+  background: var(--sand);
+}
+
+.title-row {
+  flex: none;
+  width: min(100%, 460px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-in {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 2px solid var(--line);
+  outline: 0;
+  background: none;
+  font: 800 19px -apple-system, "Noto Sans KR", sans-serif;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+
+.title-in::placeholder { color: #c4c1b9; }
+.title-in:focus { border-bottom-color: var(--ink); }
+
+.new-board {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--sand);
+  color: var(--ink-2);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.new-board:hover { background: #e8e6df; }
+
+.stage {
+  flex: 1;
+  min-height: 0;
+  align-self: stretch;
+  display: flex;
+}
+
+/* 잠김을 알리는 떨림: 맥 로그인 창의 "아니에요" 흔들기처럼 */
+.stage.shake { animation: lockShake .42s cubic-bezier(.36, .07, .19, .97); }
+@keyframes lockShake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(5px); }
+  30%, 50%, 70% { transform: translateX(-9px); }
+  40%, 60% { transform: translateX(9px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage.shake { animation: lockFade .42s; }
+  @keyframes lockFade { 50% { opacity: .4; } }
+}

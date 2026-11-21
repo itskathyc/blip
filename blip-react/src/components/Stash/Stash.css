@@ -1,0 +1,69 @@
+/* 던져 둔 것: 화면 위에 놓인 아이콘·폴더 (데스크톱처럼 놓인 자리에 그대로) */
+.st { position: fixed; inset: 0; pointer-events: none; z-index: 60; }
+.st-ic, .st-fd {
+  position: absolute; width: 76px; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  pointer-events: auto; cursor: grab; user-select: none; -webkit-user-select: none;
+  transition: left .45s cubic-bezier(.2, .8, .2, 1), top .45s cubic-bezier(.2, .8, .2, 1), opacity .35s, transform .35s;
+}
+.st-ic b, .st-fd b {
+  max-width: 76px; font: 600 11px/1.25 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Apple SD Gothic Neo', sans-serif;
+  color: #1d1d1f; text-align: center; padding: 2px 6px; border-radius: 6px;
+  background: rgba(255, 255, 255, .72); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: keep-all;
+}
+.st-glyph {
+  width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-size: 24px;
+  background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 6px 18px rgba(0, 0, 0, .10);
+}
+.st-glyph.t-clip { background: #fffaf0; font-family: Georgia, serif; color: #8a6a3a; font-size: 26px; }
+.st-ic.fresh { animation: stDrop .42s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes stDrop { from { transform: scale(.4); opacity: 0; } }
+.st-ic.in { opacity: 0; transform: scale(.35); pointer-events: none; }
+.st-ic.over .st-glyph, .st-fd.over .st-folder { outline: 2.5px solid #0a84ff; outline-offset: 3px; }
+
+/* 요약: 올려 두면 보임 */
+.st-card {
+  position: absolute; top: 60px; left: 50%; transform: translate(-50%, 4px); width: 210px; padding: 10px 12px;
+  border-radius: 12px; background: rgba(255, 255, 255, .92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .14); font: 400 12px/1.45 -apple-system, 'Apple SD Gothic Neo', sans-serif; color: #3a3a3c;
+  opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s; z-index: 2; text-align: left;
+}
+.st-card em { display: block; font-style: normal; font-size: 11px; color: #8e8e93; margin-bottom: 3px; }
+.st-ic:hover .st-card { opacity: 1; transform: translate(-50%, 0); transition-delay: .35s; }
+.st-ic.wig .st-card, .st-ic.inner .st-card { display: none; }
+
+/* 폴더 */
+.st-fd.fresh, .st-fd { animation: stPop .5s .25s cubic-bezier(.2, 1.4, .4, 1) backwards; }
+@keyframes stPop { from { transform: scale(.5); opacity: 0; } }
+.st-folder { position: relative; width: 60px; height: 48px; margin-top: 4px; }
+.st-folder::before { /* 몸통 */
+  content: ''; position: absolute; inset: 6px 0 0; border-radius: 6px 8px 8px 8px;
+  background: linear-gradient(#bfe0ff, #8cc4f6); box-shadow: 0 6px 16px rgba(10, 80, 160, .22);
+}
+.st-tab { position: absolute; left: 0; top: 0; width: 24px; height: 10px; border-radius: 5px 5px 0 0; background: #9ccdf8; }
+.st-peek { position: absolute; inset: 14px 6px 6px; display: flex; justify-content: center; gap: 1px; font-size: 14px; }
+.st-n {
+  position: absolute; right: -6px; top: -2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: #ff3b30; color: #fff; font: 700 11px/18px -apple-system, sans-serif; text-align: center;
+}
+.st-fd.on .st-folder::before { background: linear-gradient(#a8d4ff, #6fb2f2); }
+
+/* 펼친 폴더 */
+.st-open {
+  position: absolute; width: 292px; padding: 14px 12px 12px; border-radius: 18px; pointer-events: auto;
+  background: rgba(246, 246, 248, .86); backdrop-filter: blur(28px) saturate(1.6); -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .18), 0 0 0 .5px rgba(0, 0, 0, .08); animation: stOpen .22s ease-out;
+}
+@keyframes stOpen { from { transform: scale(.94); opacity: 0; } }
+.st-open p { margin: 0 4px 10px; font: 600 13px -apple-system, 'Apple SD Gothic Neo', sans-serif; color: #1d1d1f; }
+.st-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 4px; max-height: 260px; overflow: auto; }
+.st-ic.inner { position: relative; left: auto; top: auto; margin: 0 auto; }
+.st-ic.inner b { background: none; backdrop-filter: none; }
+
+/* 꾹 누르기: 흔들림 + × */
+.st-ic.wig, .st-fd.wig { animation: stWig .28s ease-in-out infinite alternate; cursor: default; }
+@keyframes stWig { from { rotate: -2.5deg; } to { rotate: 2.5deg; } }
+.st-x {
+  position: absolute; left: 4px; top: -6px; width: 20px; height: 20px; border: 0; border-radius: 50%; padding: 0;
+  background: #8e8e93; color: #fff; font: 700 13px/20px -apple-system, sans-serif; cursor: pointer; box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+}

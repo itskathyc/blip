@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>layer slider - ver2 (겹친 카드 묶음)</title>
+<!-- 원본: ver2.html 236~252행(CSS), 855~858행(+ 카드 CSS), 1370~1415행(JS) -->
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#f6f6f6;font-family:-apple-system,"Noto Sans KR",sans-serif}
+  /* 레이어 슬라이더 (원본 그대로) */
+  .lyr{position:absolute;left:50%;bottom:14px;z-index:9;transform:translate(-50%,16px);opacity:0;pointer-events:none;display:flex;align-items:center;gap:12px;
+    padding:8px 14px;border-radius:20px;background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);
+    box-shadow:0 0 0 .5px rgba(0,0,0,.12), 0 12px 32px rgba(0,0,0,.12);transition:opacity .2s, transform .28s cubic-bezier(.2,1.2,.4,1)}
+  .lyr.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+  .lyr-row{display:flex;align-items:flex-end}
+  .lyr-it{position:relative;width:118px;height:72px;margin-left:-26px;padding:0;border:0;border-radius:9px;background:#fff;cursor:pointer;
+    box-shadow:0 0 0 1px rgba(0,0,0,.1), 0 6px 14px rgba(0,0,0,.14);transform:translateY(10px) scale(.92);opacity:0;transition:transform .22s, margin .22s, opacity .2s, box-shadow .15s}
+  .lyr-it:first-child{margin-left:0}
+  .lyr-it.on{transform:none;opacity:1}
+  .lyr-row:hover .lyr-it{margin-left:8px}.lyr-row:hover .lyr-it:first-child{margin-left:0}
+  .lyr-it:hover{transform:translateY(-6px);z-index:2}
+  .lyr-it.cur{box-shadow:0 0 0 2px #111, 0 8px 18px rgba(0,0,0,.18);z-index:1}
+  .lyr-it img{width:100%;height:100%;object-fit:cover;object-position:top left;border-radius:9px;display:block}
+  .lyr-it span{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);padding:4px 8px;border-radius:7px;background:#111;color:#fff;font:700 11px -apple-system,"Noto Sans KR",sans-serif;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s}
+  .lyr-it:hover span{opacity:1}
+  .lyr-empty{width:100%;height:100%;border-radius:9px;border:1.5px dashed #c8c8c8;display:grid;place-items:center;text-align:center;font:600 10.5px/1.35 -apple-system,"Noto Sans KR",sans-serif;color:#a0a0a0;box-sizing:border-box;background:#fafafa}
+  .lyr-it.lyr-plus{display:grid;place-items:center;background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.18);border:0;cursor:pointer}
+  .lyr-it.lyr-plus b{font:300 34px/1 -apple-system,"Helvetica Neue",sans-serif;color:#555}
+  .lyr-it.lyr-plus:hover{background:#fff}
+  .lyr-row .lyr-it.lyr-plus{margin-left:10px}
+</style>
+</head>
+<body>
+<script>
+(()=>{
+  const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  // 원본: 레이어 = 쪼개진 컴포넌트들의 원본 화면. 여기서는 빈 카드로 둠 (src 없으면 .lyr-empty)
+  const ORIG = {};
+  const layers = [];
+  const slider = document.createElement("div"); slider.className = "lyr";
+  slider.innerHTML = '<div class="lyr-row"></div>';
+  document.body.appendChild(slider);
+  const lyrRow = slider.querySelector(".lyr-row");
+  let curKey = null;
+
+  function addLayer(key, o){ // 원본의 슬라이더 항목 추가 흐름
+    if(layers.includes(key)) return;
+    layers.push(key); ORIG[key] = o;
+    const b = document.createElement("button"); b.className = "lyr-it"; b.dataset.k = key; b.title = o.title;
+    b.innerHTML = (o.src ? '<img src="'+o.src+'" alt="">' : '<div class="lyr-empty">원본 이미지<br>필요</div>') + '<span>'+esc(o.title)+'</span>';
+    lyrRow.insertBefore(b, plus);
+    requestAnimationFrame(()=>b.classList.add("on"));
+    slider.classList.add("on");
+  }
+  function setCur(k){ curKey = k; lyrRow.querySelectorAll(".lyr-it").forEach(n=>n.classList.toggle("cur", n.dataset.k===k)); }
+
+  const plus = document.createElement("button"); plus.className = "lyr-it lyr-plus on"; plus.innerHTML = "<b>+</b>";
+  lyrRow.appendChild(plus);
+  plus.addEventListener("click", e=>{ e.stopPropagation(); const n = layers.length + 1; addLayer("L"+n, {title:"레이어 "+n, src:null}); setCur("L"+n); });
+  lyrRow.addEventListener("click", e=>{ const b = e.target.closest(".lyr-it:not(.lyr-plus)"); if(b) setCur(b.dataset.k); });
+
+  addLayer("L1", {title:"레이어 1", src:null}); setCur("L1");
+})();
+</script>
+</body>
+</html>

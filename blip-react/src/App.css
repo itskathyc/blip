@@ -1,0 +1,223 @@
+.shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 아래 = 화면 둘: 왼쪽 디깅(보기), 오른쪽 편집(내 판) */
+.work {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.pane {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px 12px;
+}
+
+.dig { padding-top: 64px; background: var(--sand-2); border-right: 1px solid #f0eee9; } /* 오른쪽 제목 줄만큼 내려서 두 화면 높이를 맞춤 */
+
+.view-empty {
+  width: calc(var(--view-w) * 1px);
+  height: calc(var(--view-h) * 1px);
+  background: var(--sand);
+}
+
+.title-row {
+  flex: none;
+  width: min(100%, 460px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-in {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 2px solid var(--line);
+  outline: 0;
+  background: none;
+  font: 800 19px -apple-system, "Noto Sans KR", sans-serif;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+
+.title-in::placeholder { color: #c4c1b9; }
+.title-in:focus { border-bottom-color: var(--ink); }
+
+
+.stage {
+  flex: 1;
+  min-height: 0;
+  align-self: stretch;
+  display: flex;
+}
+
+/* 잠김을 알리는 떨림: 맥 로그인 창의 "아니에요" 흔들기처럼 */
+.stage.shake { animation: lockShake .42s cubic-bezier(.36, .07, .19, .97); }
+@keyframes lockShake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(5px); }
+  30%, 50%, 70% { transform: translateX(-9px); }
+  40%, 60% { transform: translateX(9px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage.shake { animation: lockFade .42s; }
+  @keyframes lockFade { 50% { opacity: .4; } }
+}
+
+/* 각 화면 이름 줄의 오른쪽 끝: 왼쪽 Peel·Remix, 오른쪽 Publish */
+.pane-acts {
+  position: absolute;
+  top: 12px;
+  right: 20px;
+  z-index: 3;
+  display: flex;
+  gap: 6px;
+}
+
+.act-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.act-btn:hover { box-shadow: inset 0 0 0 1.5px var(--ink); }
+.act-btn.on { background: var(--accent); color: #fff; box-shadow: none; } /* Peel 켜짐 */
+.act-btn.primary { background: var(--ink); color: #fff; box-shadow: none; }
+.act-btn.primary:hover { background: #000; }
+
+/* 두 화면: 왼쪽 읽기, 오른쪽 만들기 (이름표 없이 종이 색으로만 구분) */
+.pane { position: relative; }
+
+/* 왼쪽 원본 위의 한 줄 안내 (원본을 볼 때만) */
+.dig { position: relative; }
+.dig-hint { position: absolute; top: 22px; left: 0; right: 0; margin: 0; text-align: center; font-size: 12.5px; font-weight: 700; color: var(--mute); }
+
+/* 찢어 온 조각을 내 화면 위로 가져왔을 때 */
+.stage.drop-over .viewer { box-shadow: 0 0 0 3px var(--accent), 0 20px 50px rgba(0, 0, 0, .1); }
+
+/* 기준이 모두 선명해지면 나타나는 건네기 */
+
+/* 왼쪽 빈 화면 한가운데의 + : 무엇이든 불러오기 (모달) */
+.view-empty { display: grid; place-items: center; }
+.import-plus {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink-2);
+  font-size: 36px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 6px 18px rgba(0, 0, 0, .08);
+  transition: transform .15s, color .15s;
+}
+.import-plus:hover { transform: scale(1.06); color: var(--ink); }
+
+/* 오른쪽 빈 콘텐츠 한가운데 */
+.import-plus.center { position: absolute; left: 50%; top: 50%; z-index: 2; margin: -36px 0 0 -36px; }
+
+/* 제목 줄을 없앴으므로 오른쪽도 왼쪽과 같은 높이에서 시작 */
+.edit { padding-top: 64px; }
+.pane-acts { display: flex; align-items: center; gap: 8px; }
+
+/* 잠긴 판을 누르면: 가운데 + 가 "여기부터"라고 깜빡임 */
+.import-plus.pulse { animation: plusPulse .9s ease-out 2; }
+@keyframes plusPulse { 50% { transform: scale(1.18); box-shadow: 0 0 0 10px rgba(47, 124, 246, .18), 0 6px 18px rgba(0, 0, 0, .08); } }
+@media (prefers-reduced-motion: reduce) { .import-plus.pulse { animation: none; } }
+
+/* A안: ✋ 손 따라가기면 손이 있는 쪽이 넓어짐 (끄면 Read 4 : Create 6 고정) */
+.work.a-work { transition: grid-template-columns .45s cubic-bezier(.2, 1, .3, 1); }
+@media (prefers-reduced-motion: reduce) { .work.a-work { transition: none; } }
+
+/* ---------- 검색 결과: 새 창 3개가 동시에 열렸다가 자리를 잡음 ---------- */
+.dig .stage { position: relative; }
+.burst { position: absolute; inset: 0; z-index: 5; pointer-events: none; animation: burstBg 1.5s ease both; }
+@keyframes burstBg { 0% { background: rgba(247, 246, 242, 0); } 15%, 70% { background: rgba(247, 246, 242, .92); } 100% { background: rgba(247, 246, 242, 0); } }
+.bw { position: absolute; left: 50%; top: 46%; width: 195px; height: 244px; margin: -122px 0 0 -97px; border-radius: 12px; overflow: hidden; background: #fff;
+  box-shadow: 0 0 0 .5px rgba(0, 0, 0, .12), 0 20px 50px rgba(0, 0, 0, .18); }
+.bw-in { position: absolute; left: 0; top: 0; transform: scale(.5); transform-origin: top left; }
+.bw0 { --x: -150px; --r: -4deg; animation: bwOpen .5s cubic-bezier(.2, 1.2, .3, 1) both, bwMain .45s .95s cubic-bezier(.4, 0, .2, 1) forwards; }
+.bw1 { --x: 0px; --r: 0deg; animation: bwOpen .5s .12s cubic-bezier(.2, 1.2, .3, 1) both, bwDown .45s 1s cubic-bezier(.4, 0, .2, 1) forwards; }
+.bw2 { --x: 150px; --r: 4deg; animation: bwOpen .5s .24s cubic-bezier(.2, 1.2, .3, 1) both, bwDown .45s 1.05s cubic-bezier(.4, 0, .2, 1) forwards; }
+@keyframes bwOpen { from { opacity: 0; transform: translate(0, 30px) scale(.6); } to { opacity: 1; transform: translate(var(--x), 0) rotate(var(--r)); } }
+@keyframes bwMain { from { opacity: 1; transform: translate(var(--x), 0) rotate(var(--r)); } to { opacity: 0; transform: translate(0, 0) scale(2.1); } }
+@keyframes bwDown { from { opacity: 1; transform: translate(var(--x), 0) rotate(var(--r)); } to { opacity: 0; transform: translate(calc(var(--x) * .3), 340px) scale(.3); } }
+@media (prefers-reduced-motion: reduce) { .burst { display: none; } }
+.hand-float { position: fixed; left: 12px; bottom: 12px; z-index: 45; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .8); box-shadow: 0 0 0 .5px rgba(0, 0, 0, .12), 0 4px 12px rgba(0, 0, 0, .08); font-size: 17px; cursor: pointer; opacity: .55; transition: opacity .15s; }
+.hand-float:hover, .hand-float.on { opacity: 1; }
+.hand-float.on { box-shadow: 0 0 0 2px #0a84ff, 0 4px 12px rgba(0, 0, 0, .08); }
+.bw.solo { --x: 0px; --r: 0deg; }
+
+/* 글자 던지기: 고른 글을 0.2초 꾹 누르면 '잡힘' — 선택 색이 짙어지고 손 모양 */
+body.text-armed, body.text-armed * { cursor: grabbing !important; }
+body.text-armed ::selection { background: #0a84ff; color: #fff; }
+/* 읽기(왼쪽)의 글은 고를 수 있음 — 앱 전체는 user-select: none */
+.pane.dig .cs-slide .tx, .pane.dig .cs-slide [data-scroll], .pane.dig .cs-slide [data-scroll] * { user-select: text; -webkit-user-select: text; }
+.pane.dig .cs-slide [data-scroll] button, .pane.dig .cs-slide [data-scroll] img { user-select: none; -webkit-user-select: none; }
+
+/* 위아래 2분할: 아래에 따로 연 화면 */
+.pane.dig .stage.split { display: flex; flex-direction: column; gap: 10px; }
+.pane.dig .stage.split > .viewer-box, .pane.dig .stage.split > .split-b { flex: 1 1 0; min-height: 0; }
+.split-b { position: relative; display: flex; animation: splitIn .35s cubic-bezier(.2, 1, .3, 1); }
+@keyframes splitIn { from { opacity: 0; transform: translateY(30px); } }
+.split-x { position: absolute; right: -10px; top: -10px; z-index: 4; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: rgba(118, 118, 128, .16); color: #3a3a3c; font: 500 15px/24px -apple-system, sans-serif; cursor: pointer; }
+.split-x:hover { background: rgba(118, 118, 128, .3); }
+.pane.dig .stage.view-over::after { content: '여기에 놓으면 아래에 따로 열려요'; position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); padding: 6px 12px; border-radius: 999px; background: rgba(29, 29, 31, .82); color: #fff; font: 600 12px -apple-system, "Apple SD Gothic Neo", sans-serif; pointer-events: none; z-index: 6; }
+
+/* 뒤로 · 다음 (왼쪽 화면 왼쪽 아래) */
+.nav-btns { position: absolute; left: 8px; bottom: 8px; z-index: 6; display: flex; gap: 1px; padding: 2px; border-radius: 999px; background: rgba(255, 255, 255, .82); box-shadow: 0 0 0 .5px rgba(0, 0, 0, .12), 0 2px 8px rgba(0, 0, 0, .08); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.nav-btns button { width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.nav-btns button:hover:not(:disabled) { background: var(--sand); }
+.nav-btns button:disabled { color: #c9c6be; cursor: default; }
+
+/* 오른쪽에 떠 있는 아이템 (콘텐츠 화면을 만들기 전에 놓은 조각 · 글) */
+.floats { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
+.floats .pc { pointer-events: auto; z-index: 1; }
+.floats .pc:active { cursor: grabbing; }
+
+/* Enter로 저장했을 때 잠깐 */
+.saved-toast { position: absolute; left: 50%; top: 18px; z-index: 30; transform: translateX(-50%); padding: 6px 14px; border-radius: 999px; background: rgba(29, 29, 31, .86); color: #fff; font: 600 12.5px -apple-system, "Apple SD Gothic Neo", sans-serif; pointer-events: none; animation: savedIn 1.3s ease both; }
+@keyframes savedIn { 0% { opacity: 0; transform: translate(-50%, -6px); } 15%, 75% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+
+/* 가운데 선: 잡고 끌어 비율 바꾸기 */
+.work { position: relative; }
+.work.resizing { transition: none !important; cursor: col-resize; user-select: none; }
+.work.resizing * { pointer-events: none; }
+.divider { position: absolute; top: 0; bottom: 0; z-index: 50; width: 12px; cursor: col-resize; touch-action: none; pointer-events: auto !important; }
+.divider::after { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: transparent; transition: background .15s; }
+.divider:hover::after, .work.resizing .divider::after { background: #0a84ff; }
+
+/* Publish ▾ → Commit · Publish */
+.pub { position: relative; }
+.pub > .act-btn { display: inline-flex; align-items: center; gap: 6px; }
+.pub > .act-btn svg { transition: transform .15s; }
+.pub > .act-btn.open svg { transform: rotate(180deg); }
+.pub-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 168px; padding: 4px; border-radius: 12px; background: rgba(255, 255, 255, .96); box-shadow: 0 0 0 .5px rgba(0, 0, 0, .14), 0 10px 30px rgba(0, 0, 0, .12); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); animation: pubIn .14s ease-out both; }
+.pub-menu button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; padding: 7px 10px; border: 0; border-radius: 8px; background: none; color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.pub-menu button:hover { background: var(--sand); }
+.pub-menu b { font-size: 13px; font-weight: 600; }
+.pub-menu span { font-size: 11px; color: var(--mute); }
+@keyframes pubIn { from { opacity: 0; transform: translateY(-4px); } }

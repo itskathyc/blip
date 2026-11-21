@@ -1,0 +1,170 @@
+/* ---------- 빈칸: 드래그한 크기 그대로, 안의 요소는 --k로 함께 줄어듦 (기준 500×290) ----------
+   애플식: 그리는 동안은 Finder의 선택 사각형, 놓으면 반투명 유리판(vibrancy) — 점선·굵은 글씨 없음 */
+.rg { --k: 1; --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; position: fixed; z-index: 40; border: 1px solid rgba(0, 122, 255, .55); border-radius: calc(14px * var(--k)); background: rgba(0, 122, 255, .10); pointer-events: none; }
+.rg.done {
+  display: flex; flex-direction: column; gap: calc(18px * var(--k)); padding: calc(22px * var(--k)) calc(24px * var(--k));
+  border: 0; border-radius: calc(26px * var(--k)); pointer-events: auto; overflow: hidden;
+  background: rgba(250, 250, 252, .78); backdrop-filter: blur(36px) saturate(1.8); -webkit-backdrop-filter: blur(36px) saturate(1.8);
+  box-shadow: 0 0 0 .5px rgba(0, 0, 0, .12), inset 0 0 0 .5px rgba(255, 255, 255, .6), 0 24px 60px rgba(0, 0, 0, .16), 0 4px 14px rgba(0, 0, 0, .06);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  animation: rgIn .22s cubic-bezier(.2, .9, .3, 1.2);
+}
+@keyframes rgIn { from { opacity: 0; transform: scale(.97); } }
+/* 닫기: 알림센터처럼 왼쪽 위, 올려 둘 때만 */
+.rg .rx {
+  position: absolute; left: calc(10px * var(--k)); top: calc(10px * var(--k)); width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%;
+  background: rgba(118, 118, 128, .16); color: rgba(60, 60, 67, .7); display: grid; place-items: center; cursor: pointer;
+  opacity: 0; transition: opacity .15s, background .15s;
+}
+.rg.done:hover .rx, .rg .rx:focus-visible { opacity: 1; }
+.rg .rx:hover { background: rgba(118, 118, 128, .28); }
+.rg .rx svg { width: 11px; height: 11px; }
+/* 입력이 맨 위 (Spotlight처럼), 그 아래 가는 선, 그 아래 공유 시트 같은 아이콘 줄 */
+.rg input {
+  order: -1; flex: none; width: 100%; height: calc(40px * var(--k)); padding: 0 0 calc(14px * var(--k)); box-sizing: content-box;
+  border: 0; border-bottom: .5px solid rgba(60, 60, 67, .18); outline: 0; background: none;
+  font: 400 calc(24px * var(--k)) / 1.2 var(--sf); letter-spacing: -.02em; color: #1d1d1f; caret-color: #0a84ff;
+}
+.rg input::placeholder { color: rgba(60, 60, 67, .3); }
+.rg .ri { display: flex; flex-wrap: wrap; gap: calc(14px * var(--k)) calc(22px * var(--k)); }
+.rg .ic { display: flex; flex-direction: column; align-items: center; gap: calc(7px * var(--k)); width: calc(64px * var(--k)); padding: 0; border: 0; background: none; cursor: pointer; transition: transform .15s; }
+.rg .ic img { display: block; width: calc(50px * var(--k)); height: calc(50px * var(--k)); object-fit: contain; border-radius: calc(11.5px * var(--k)); box-shadow: 0 1px 2px rgba(0, 0, 0, .1), 0 4px 10px rgba(0, 0, 0, .06); }
+.rg .icl { max-width: 100%; font: 400 calc(11.5px * var(--k)) / 1.2 var(--sf); color: rgba(60, 60, 67, .85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.01em; }
+.rg .ic:hover img { filter: brightness(.94); }
+.rg .ic:active, .rg .ic.on { transform: scale(.94); }
+.rg .ic.on img { box-shadow: 0 0 0 2.5px #fff, 0 0 0 4.5px #0a84ff; }
+.rg .rnew { font: 600 calc(13px * var(--k)) / 1.3 var(--sf); color: rgba(60, 60, 67, .6); letter-spacing: -.01em; }
+.rg.newmode input { order: 0; }
+body.drawing, body.drawing * { cursor: crosshair !important; }
+
+/* ---------- 빈칸에서 만든 아이템: 격자에 붙어 지울 때까지 그 자리에 ---------- */
+.bfull { position: fixed; inset: 0; z-index: 35; pointer-events: none; }
+.bitem { position: absolute; width: 120px; display: flex; flex-direction: column; align-items: center; gap: 10px; font: 700 13.5px -apple-system, "Noto Sans KR", sans-serif; white-space: nowrap; pointer-events: auto; cursor: pointer; }
+.bitem .bic { width: 72px; height: 72px; border-radius: 18px; display: grid; place-items: center; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 2px 6px rgba(0, 0, 0, .08); font-size: 28px; font-weight: 800; color: var(--mute); }
+.bitem span { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+.bitem .bx { position: absolute; left: 14px; top: -6px; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: var(--ink); color: #fff; font-size: 13px; line-height: 22px; cursor: pointer; display: none; }
+.bfull.wiggle .bitem { animation: bWig .26s ease-in-out infinite alternate; }
+.bfull.wiggle .bitem:nth-child(2n) { animation-delay: -.13s; }
+.bfull.wiggle .bitem .bx { display: block; }
+@keyframes bWig { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
+
+/* ---------- 처음 쓰는 사람을 위한 시범 ---------- */
+.gh { position: fixed; inset: 0; z-index: 30; pointer-events: none; animation: ghIn .4s; transition: opacity .4s; }
+.gh.out { opacity: 0; }
+@keyframes ghIn { from { opacity: 0; } }
+.gh .rg { z-index: auto; opacity: .6; }
+.gh .rg.done { pointer-events: none; }
+.gh .ic { cursor: default; }
+.gh .ic.pop { animation: ghPop .3s cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes ghPop { from { opacity: 0; transform: scale(.6); } }
+.gh .caret { position: absolute; left: 28%; top: calc(140px * var(--k)); width: max(1.5px, calc(3px * var(--k))); height: calc(42px * var(--k)); background: var(--ink); animation: ghBlink 1s steps(1) infinite; }
+@keyframes ghBlink { 50% { opacity: 0; } }
+.gh .cur { position: absolute; width: 22px; height: 22px; margin: -2px 0 0 -3px; transition: transform .15s; }
+.gh .cur.down { transform: scale(.85); }
+.gh .cur svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .25)); }
+.gh .cur .x { display: none; }
+.gh .cur.drag .a { display: none; }
+.gh .cur.drag .x { display: block; }
+.gh .cap { position: absolute; transform: translateX(-50%); padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, .85); font: 700 14px -apple-system, "Noto Sans KR", sans-serif; color: var(--dash); white-space: nowrap; letter-spacing: -.01em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gh, .gh .cur, .gh .ic.pop { animation: none; transition: none; }
+  .gh .caret { animation: none; }
+  .bfull.wiggle .bitem { animation: none; }
+}
+
+/* ---------- 드로잉키트: 피그마의 기본 도구 막대 ---------- */
+.bitem.kit-item { width: auto; gap: 0; white-space: nowrap; }
+.fk { position: relative; display: flex; align-items: center; gap: 2px; padding: 8px; border-radius: 22px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 12px 32px rgba(0, 0, 0, .12); }
+.fk.off { opacity: .6; pointer-events: none; }
+.fk-btn { width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: none; color: #1e1e1e; display: grid; place-items: center; cursor: pointer; }
+.fk-btn:hover { background: #f1f1f1; }
+.fk-btn.on { background: #0d99ff; color: #fff; }
+.fk-group { position: relative; display: flex; align-items: center; }
+.fk-chev { width: 18px; height: 44px; padding: 0; border: 0; border-radius: 8px; background: none; color: #1e1e1e; display: grid; place-items: center; cursor: pointer; }
+.fk-chev:hover, .fk-chev.open { background: #ececec; }
+.fk-div { width: 1px; height: 32px; margin: 0 8px; background: #e6e6e6; }
+.fk-props { display: flex; align-items: center; gap: 4px; }
+.fk-what { margin-right: 4px; font-size: 11.5px; font-weight: 800; color: var(--mute); }
+.fk-prop { width: 36px; height: 36px; padding: 0; border: 0; border-radius: 10px; background: #f3f3f3; font-weight: 900; cursor: pointer; display: grid; place-items: center; }
+.fk-prop:hover { background: #e8e8e8; }
+.fk-prop.small { font-size: 12px; }
+.fk-prop.big { font-size: 18px; }
+.fk-prop.swatch::before { content: ""; width: 20px; height: 20px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); }
+
+/* ▾ 메뉴: 피그마처럼 어두운 판 */
+.fk-menu { position: absolute; bottom: calc(100% + 14px); left: -10px; z-index: 5; min-width: 260px; padding: 8px; border-radius: 16px; background: #1e1e1e; box-shadow: 0 16px 40px rgba(0, 0, 0, .3); }
+.fk-item { width: 100%; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px 0 8px; border: 0; border-radius: 9px; background: none; color: #fff; font: 500 15px -apple-system, "Inter", sans-serif; cursor: pointer; }
+.fk-item:hover, .fk-item.cur { background: #0d99ff; }
+.fk-check { width: 14px; font-size: 13px; }
+.fk-label { flex: 1; text-align: left; }
+.fk-item kbd { font: 500 14px -apple-system, sans-serif; color: rgba(255, 255, 255, .7); }
+
+/* 그리는 도구를 고른 동안: 오른쪽 화면 위 커서 */
+body.tool-draw .edit .es { cursor: crosshair; }
+body.tool-text .edit .es { cursor: text; }
+
+/* ---------- 작은 빈칸 (우클릭 · 꾹 누르기): Spotlight 한 줄 ---------- */
+.rg.done.compact { flex-direction: row; align-items: center; gap: 10px; padding: 0 16px 0 12px; border-radius: 16px; }
+.rg.compact .ri { flex: none; flex-wrap: nowrap; gap: 6px; }
+.rg.compact .ic { width: auto; }
+.rg.compact .ic img { width: 30px; height: 30px; border-radius: 7px; }
+.rg.compact .icl { display: none; }
+.rg.compact input { order: 0; flex: 1; min-width: 0; height: 28px; padding: 0 0 0 10px; border: 0; border-left: .5px solid rgba(60, 60, 67, .18); font-size: 20px; }
+.rg.compact .rnew { flex: none; font-size: 13px; white-space: nowrap; }
+.rg.compact .rx { display: none; }
+
+/* 떠 있는 아이템: 놓이자마자 끌어서 옮길 수 있음 */
+.bitem { cursor: grab; touch-action: none; }
+.bitem.moving { cursor: grabbing; transition: none; z-index: 2; }
+.bitem.moving .bic { box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 14px 30px rgba(0, 0, 0, .16); }
+.bitem.fresh { animation: bItemIn .32s cubic-bezier(.2, 1, .3, 1); }
+@keyframes bItemIn { from { opacity: 0; transform: scale(.85); } }
+@media (prefers-reduced-motion: reduce) { .bitem.fresh { animation: none; } }
+
+/* 놓은 빈칸 = 내용만큼의 작은 유리판 (기존의 1/2). 아이콘은 맥의 최소 클릭 크기 28pt, 이름은 최소 글자 10pt */
+.rg.card { width: auto; height: auto; padding: 9px 10px 10px; gap: 7px; border-radius: 13px; }
+.rg.card input { width: 100%; min-width: 0; height: 18px; padding: 0 0 6px; font-size: 13px; }
+.rg.card .ri { flex-wrap: nowrap; gap: 4px; }
+.rg.card .ic { width: 52px; gap: 3px; } /* '새로 만들기'가 잘리지 않는 폭 */
+.rg.card .ic img { width: 28px; height: 28px; border-radius: 7px; }
+.rg.card .icl { font-size: 10px; }
+.rg.card .rx { left: 4px; top: 4px; width: 16px; height: 16px; }
+.rg.card .rx svg { width: 9px; height: 9px; }
+.rg.card .rnew { font-size: 11px; }
+.rg.card.newmode { min-width: 200px; }
+
+/* 작은 빈칸(우클릭)도 1/2 */
+.rg.done.compact { gap: 5px; padding: 0 8px 0 6px; border-radius: 9px; }
+.rg.compact .ri { gap: 3px; }
+.rg.compact .ic img { width: 18px; height: 18px; border-radius: 4px; }
+.rg.compact input { height: 18px; padding-left: 6px; font-size: 12px; }
+.rg.compact .rnew { font-size: 11px; }
+
+/* 드로잉키트도 1/2. 어디든 잡고 옮길 수 있음 */
+.bitem.kit-item .fk { zoom: .5; }
+.bitem.kit-item { cursor: grab; }
+.bitem.kit-item.moving { cursor: grabbing; }
+.bitem.kit-item.moving .fk { box-shadow: 0 18px 40px rgba(0, 0, 0, .2); }
+
+/* ---------- 콘텐츠 우클릭: 피그마 우클릭 메뉴 그대로 (어두운 메뉴) + 위에 블립의 4가지 · 검색 ---------- */
+.fm { position: fixed; z-index: 70; width: 240px; padding: 8px 0 6px; border-radius: 13px; background: #1e1e1e; color: #fff;
+  box-shadow: 0 0 0 .5px rgba(0, 0, 0, .6), 0 10px 32px rgba(0, 0, 0, .35); font: 400 12px/1 Inter, -apple-system, "Apple SD Gothic Neo", sans-serif; animation: fmIn .1s ease-out; user-select: none; }
+@keyframes fmIn { from { opacity: 0; transform: translateY(-3px); } }
+.fm-ics { display: flex; gap: 6px; padding: 0 10px 8px; }
+.fm-ic { flex: 1; height: 34px; padding: 0; border: 0; border-radius: 8px; background: rgba(255, 255, 255, .06); display: grid; place-items: center; cursor: pointer; }
+.fm-ic:hover { background: rgba(255, 255, 255, .14); }
+.fm-ic img { width: 22px; height: 22px; border-radius: 5px; object-fit: contain; }
+.fm-in { display: block; width: calc(100% - 20px); margin: 0 10px 6px; height: 28px; padding: 0 9px; border: 0; border-radius: 6px; outline: 0; background: #2c2c2c; color: #fff; font: inherit; user-select: text; }
+.fm-in::placeholder { color: rgba(255, 255, 255, .4); }
+.fm-in:focus { box-shadow: inset 0 0 0 1px #0d99ff; }
+.fm-list { list-style: none; margin: 0; padding: 0 6px; }
+.fm-list li { display: flex; align-items: center; justify-content: space-between; height: 24px; padding: 0 10px; border-radius: 5px; cursor: default; }
+.fm-list li:not(.off):not(.fm-sep):hover { background: #0d99ff; }
+.fm-list li.off { color: rgba(255, 255, 255, .36); }
+.fm-list kbd { font: inherit; color: rgba(255, 255, 255, .45); letter-spacing: .02em; }
+.fm-list li:not(.off):hover kbd { color: rgba(255, 255, 255, .85); }
+.fm-sep { height: 1px !important; margin: 5px 4px; padding: 0 !important; background: rgba(255, 255, 255, .1); }
+.fm-list li.fm-blip { color: #4fb3ff; font-weight: 600; }
+.fm-list li.fm-blip kbd { color: rgba(255, 255, 255, .5); }
+.fm-top { margin-bottom: 4px; }

@@ -1,0 +1,43 @@
+.viewer-box {
+  flex: 1;
+  min-height: 0;
+  min-width: 0; /* 콘텐츠 크기에 버티지 않고 남은 자리만큼 줄어야 축소 비율이 다시 계산됨 */
+  width: 100%;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.viewer-frame { position: relative; flex: none; }
+
+.viewer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 20px 50px rgba(0, 0, 0, .1);
+}
+
+.viewer-inner {
+  width: calc(var(--view-w) * 1px);
+  height: calc(var(--view-h) * 1px);
+  transform-origin: top left;
+}
+
+/* 위로 밀기: 카드가 통째로 위로 빠지고, 다음 카드가 아래에서 올라옴 (아래로 밀기는 반대) */
+.viewer-frame.mv-out-up { animation: vfOutUp .2s cubic-bezier(.4, 0, 1, 1) forwards; }
+.viewer-frame.mv-in-up { animation: vfInUp .36s cubic-bezier(.2, 1, .3, 1); }
+.viewer-frame.mv-out-down { animation: vfOutDown .2s cubic-bezier(.4, 0, 1, 1) forwards; }
+.viewer-frame.mv-in-down { animation: vfInDown .36s cubic-bezier(.2, 1, .3, 1); }
+@keyframes vfOutUp { to { transform: translateY(-70%) scale(.94); opacity: 0; } }
+@keyframes vfInUp { from { transform: translateY(70%) scale(.94); opacity: 0; } }
+@keyframes vfOutDown { to { transform: translateY(70%) scale(.94); opacity: 0; } }
+@keyframes vfInDown { from { transform: translateY(-70%) scale(.94); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .viewer-frame[class*='mv-'] { animation: none; } }
+
+/* 크기 바꾸기: 손잡이 표시 없이, 그 모서리만 둥글지 않음 */
+.viewer-frame.sizable .viewer { border-bottom-right-radius: 3px; }
+.vf-corner { position: absolute; right: -6px; bottom: -6px; width: 22px; height: 22px; z-index: 3; cursor: nwse-resize; touch-action: none; }

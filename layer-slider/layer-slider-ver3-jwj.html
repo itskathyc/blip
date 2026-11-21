@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>layer slider - ver3 주우재 (히스토리 + 제안 + 핀)</title>
+<!-- 원본: jwj.css 359~395행(dock CSS), jwj.js 878~899행(dockItems·dkHTML·renderDock), 1102~1175행(클릭·핀·꾹 눌러 끌기·가로 휠) -->
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:#fff;font-family:-apple-system,"Noto Sans KR",sans-serif;color:#111;user-select:none;-webkit-user-select:none}
+  /* ---------- dock: 레이어 슬라이더 (히스토리 + 제안 + 핀) ---------- */
+  #dock{position:fixed;left:50%;bottom:18px;z-index:20;transform:translateX(-50%);width:min(980px,calc(100vw - 40px));height:112px;border-radius:24px;background:rgba(255,255,255,.78);backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);box-shadow:0 0 0 .5px rgba(0,0,0,.08),0 10px 30px rgba(0,0,0,.08);display:flex;align-items:center;padding:0 14px;gap:0;overflow:hidden}
+  #pins{display:flex;gap:10px;flex:none;align-items:center;height:100%}
+  #pins:empty{display:none}
+  #pins:not(:empty){padding-right:12px;margin-right:12px;border-right:1px solid rgba(0,0,0,.1)}
+  #rest{flex:1;min-width:0;height:100%;overflow-x:auto;overflow-y:hidden;display:flex;gap:10px;align-items:center;scrollbar-width:none;scroll-behavior:smooth}
+  #rest::-webkit-scrollbar{display:none}
+  .dk{position:relative;flex:none;width:134px;height:84px;border-radius:12px;overflow:hidden;background:#f3f3f3;cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.06);transition:box-shadow .2s,opacity .3s}
+  .dk.cur{box-shadow:0 0 0 2.5px #111}
+  .dk .thumb{position:absolute;inset:0;background:#fff center/cover no-repeat}
+  .dk > em{position:absolute;left:0;right:0;bottom:0;padding:12px 6px 4px;font:700 10.5px -apple-system,"Noto Sans KR",sans-serif;font-style:normal;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.55));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dk.sug{background:rgba(255,255,255,.6);box-shadow:none;outline:1.5px dashed #1a73e8;outline-offset:-1.5px}
+  .dk.sug > em{background:none;color:#1a56c4;padding:0 8px 6px}
+  .dk.sug .lbl{position:absolute;left:8px;top:7px;font:700 10px -apple-system,"Noto Sans KR",sans-serif;color:#1a73e8;opacity:.8}
+  .dk.sug .big{position:absolute;left:8px;right:8px;top:24px;font:800 13px/1.3 -apple-system,"Noto Sans KR",sans-serif;color:#1a56c4;word-break:keep-all}
+  .dk.newin{animation:dkIn .5s cubic-bezier(.2,.9,.25,1) both}
+  @keyframes dkIn{from{opacity:0;transform:translateY(20px) scale(.8)}to{opacity:1;transform:none}}
+  .dk .pinb{position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(255,255,255,.92);display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .15s;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.15);z-index:2}
+  .dk:hover .pinb{opacity:1}
+  .dk .pinb svg{width:12px;height:12px;color:#555}
+  .dk.pinned .pinb{opacity:1;background:#111}
+  .dk.pinned .pinb svg{color:#fff}
+  .dk.dragging{opacity:.35}
+  .dk.drop{box-shadow:0 0 0 3px #1a73e8}
+  .ghost{position:fixed;z-index:200;width:150px;height:94px;margin:-47px 0 0 -75px;border-radius:12px;background:#eee center/cover;box-shadow:0 16px 36px rgba(0,0,0,.25),0 0 0 2px #1a73e8;pointer-events:none;overflow:hidden}
+  .ghost em{position:absolute;left:0;right:0;bottom:0;padding:10px 8px 5px;font:800 11px -apple-system,"Noto Sans KR",sans-serif;font-style:normal;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6))}
+</style>
+</head>
+<body>
+<div id="dock"><div id="pins"></div><div id="rest"></div></div>
+<script>
+(()=>{
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const SVG = {pin:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 3l7 7-2 2-1-1-4 4 .5 4.5L13 21l-4-4-5 5-1-1 5-5-4-4 1.5-1.5L10 11l4-4-1-1z"/></svg>'};
+  // 원본: CV = 히스토리(연 화면), SUG = 블립 제안, PINS = 핀 한 항목 id. 여기서는 빈 항목
+  const CV = [1,2,3,4].map(n=>({id:"c"+n, t:"화면 "+n}));
+  const SUG = [];
+  let PINS = [], curId = "c1";
+
+  function addSug(s){ if(SUG.find(x=>x.id === s.id)) return; s.fresh = true; SUG.push(s); renderDock(); setTimeout(()=>{ const r = $("#rest"); if(r && !PINS.includes(s.id)) r.scrollLeft = r.scrollWidth; }, 30); }
+  function dockItems(){
+    const H = CV.map(c=>({id:c.id, kind:"canvas", c, t:c.t}));
+    const S = SUG.map(s=>({id:s.id, kind:"sug", s, t:s.t}));
+    return H.concat(S);
+  }
+  function dkHTML(it){
+    const pinned = PINS.includes(it.id), isCur = it.kind === "canvas" && it.id === curId;
+    const pinb = '<button class="pinb" data-pin="'+it.id+'" title="핀">'+SVG.pin+'</button>';
+    if(it.kind === "canvas") return '<div class="dk'+(isCur ? ' cur' : '')+(pinned ? ' pinned' : '')+'" data-id="'+it.id+'"><div class="thumb"></div><em>'+esc(it.t)+'</em>'+pinb+'</div>';
+    const s = it.s, fresh = s.fresh; s.fresh = false;
+    const cls = "dk sug" + (pinned ? " pinned" : "") + (fresh ? " newin" : "");
+    return '<div class="'+cls+'" data-id="'+it.id+'" style="'+(fresh ? 'animation-delay:'+(s.delay || 0)+'ms' : '')+'"><span class="lbl">'+esc(s.lbl)+'</span><div class="big">'+esc(s.big || s.t)+'</div>'+pinb+'</div>';
+  }
+  function renderDock(){
+    const L = dockItems(), P = PINS.map(id=>L.find(x=>x.id === id)).filter(Boolean), R = L.filter(x=>!PINS.includes(x.id));
+    const rest = $("#rest"), sl = rest.scrollLeft;
+    $("#pins").innerHTML = P.map(dkHTML).join("");
+    rest.innerHTML = R.map(dkHTML).join("");
+    rest.scrollLeft = sl;
+  }
+
+  // dock: 클릭 · 핀 · 끌기
+  let dg = null;
+  function dockClick(id){ const it = dockItems().find(x=>x.id === id); if(!it) return; if(it.kind === "canvas"){ curId = id; renderDock(); } }
+  $("#dock").addEventListener("click", e=>{
+    const p = e.target.closest("[data-pin]"); if(p){ e.stopPropagation(); const id = p.dataset.pin; PINS = PINS.includes(id) ? PINS.filter(x=>x !== id) : PINS.concat(id); renderDock(); return; }
+  });
+  function dragSource(e){
+    const dk = e.target.closest(".dk[data-id]"); if(dk && !e.target.closest("[data-pin]")){ const it = dockItems().find(x=>x.id === dk.dataset.id); return {el:dk, it, hold:true, t:it ? it.t : ""}; }
+    return null;
+  }
+  document.addEventListener("pointerdown", e=>{
+    const s = dragSource(e); if(!s) return;
+    dg = {...s, x:e.clientX, y:e.clientY, on:false, armed:!s.hold, cancel:false};
+    if(s.hold) dg.timer = setTimeout(()=>{ if(!dg || dg.cancel) return; dg.armed = true; dg.el.classList.add("lift"); }, 200); // 0.2초 꾹
+  });
+  document.addEventListener("pointermove", e=>{
+    if(!dg) return;
+    const dist = Math.hypot(e.clientX - dg.x, e.clientY - dg.y);
+    if(!dg.on){
+      if(!dg.armed){ if(dist > 7){ dg.cancel = true; clearTimeout(dg.timer); } return; }
+      if(dist < 4) return;
+      dg.on = true; dg.el.classList.remove("lift"); dg.el.classList.add("dragging");
+      const g = document.createElement("div"); g.className = "ghost"; g.style.cssText = "background:#fff;"; g.innerHTML = '<em>'+esc(dg.t)+'</em>'; document.body.appendChild(g); dg.g = g;
+    }
+    dg.g.style.left = e.clientX + "px"; dg.g.style.top = e.clientY + "px";
+  });
+  document.addEventListener("pointerup", e=>{
+    if(!dg) return; const d = dg; dg = null; clearTimeout(d.timer); d.el.classList.remove("lift");
+    if(!d.on){ if(d.it && !d.armed && !d.cancel) dockClick(d.it.id); return; }
+    d.el.classList.remove("dragging"); if(d.g) d.g.remove();
+    // 원본: 여기서 dropTarget(캘린더 칸 · 기획안 등)에 복사본을 붙임
+  });
+  $("#rest").addEventListener("wheel", e=>{ if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ $("#rest").scrollLeft += e.deltaY; e.preventDefault(); } }, {passive:false});
+
+  renderDock();
+  window.addSug = addSug; // 제안 카드 추가: addSug({id, lbl, big, t, delay})
+})();
+</script>
+</body>
+</html>

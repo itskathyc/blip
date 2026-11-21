@@ -1,0 +1,51 @@
+/* 띠 아래 전체를 덮는 히스토리 전경 */
+.bh {
+  position: fixed; left: 0; right: 0; top: 56px; bottom: 0; z-index: 35;
+  background: rgba(249, 248, 245, .9);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+  overflow-y: auto;
+  animation: bhDown .34s cubic-bezier(.2, 1, .3, 1);
+}
+@keyframes bhDown { from { opacity: 0; transform: translateY(-24px); } }
+
+.bh-in { max-width: 1080px; margin: 0 auto; padding: 26px 32px 48px; display: flex; flex-direction: column; gap: 24px; animation: bhOut .3s cubic-bezier(.2, 1, .3, 1); }
+.bh-in.zoom { animation: bhZoom .34s cubic-bezier(.2, 1, .3, 1); }
+@keyframes bhOut { from { opacity: 0; transform: scale(1.04); } }
+@keyframes bhZoom { from { opacity: 0; transform: scale(.94); } }
+
+.bh-head { display: flex; align-items: center; gap: 12px; }
+.bh-count { margin-right: auto; font-size: 14px; color: var(--mute); }
+.bh-count b { color: var(--ink); font-size: 17px; font-variant-numeric: tabular-nums; }
+.bh-title { margin-right: auto; font-size: 22px; font-weight: 900; letter-spacing: -.02em; }
+.bh-title em, .bh-name em { font-style: normal; color: var(--mute); font-weight: 700; }
+.bh-load { height: 36px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--ink); color: #fff; font-size: 13.5px; font-weight: 800; cursor: pointer; }
+.bh-load:hover { background: #000; }
+.bh-x, .bh-back { width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: var(--sand); color: var(--ink-2); font-size: 20px; line-height: 1; cursor: pointer; }
+.bh-x:hover, .bh-back:hover { background: #e8e6df; color: var(--ink); }
+
+/* .blip 하나 = 파일 같은 물건 */
+.bh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; }
+.bh-blip { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 18px 18px 16px; border: 0; border-radius: 18px; background: var(--paper); text-align: left; cursor: pointer; box-shadow: 0 0 0 1px rgba(0, 0, 0, .05), 0 8px 24px rgba(0, 0, 0, .05); transition: transform .18s, box-shadow .18s; }
+.bh-blip:hover { transform: translateY(-3px); box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 14px 32px rgba(0, 0, 0, .09); }
+.bh-fan { position: relative; width: 100%; height: 130px; margin-bottom: 8px; }
+.bh-fc { position: absolute; top: 4px; left: calc(50% - 48px + (var(--k) - 1) * 40px); width: 96px; height: 120px; border-radius: 10px; overflow: hidden; background: var(--sand); box-shadow: 0 0 0 2px #fff, 0 4px 12px rgba(0, 0, 0, .12); transform: rotate(calc((var(--k) - 1) * 6deg)); z-index: calc(3 - var(--k)); transition: transform .2s; }
+.bh-fc:nth-child(2) { z-index: 3; }
+.bh-blip:hover .bh-fc { transform: rotate(calc((var(--k) - 1) * 9deg)) translateY(-3px); }
+.bh-name { font-size: 16px; font-weight: 900; letter-spacing: -.02em; }
+.bh-meta { font-size: 12.5px; color: var(--mute); }
+
+/* .blip 안: 차례 하나 = 내가 한 것 → 블립의 답 3개 */
+.bh-turns { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.bh-turn { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 16px; background: var(--paper); box-shadow: 0 0 0 1px rgba(0, 0, 0, .05); }
+.bh-when { width: 82px; flex: none; font-size: 12.5px; color: var(--mute); font-variant-numeric: tabular-nums; }
+.bh-act { position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; }
+.bh-act.tile { width: 44px; height: 55px; border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 2px var(--ink); }
+.bh-act.word { height: 34px; padding: 0 14px; border-radius: 999px; background: var(--sand); font-size: 14px; font-weight: 800; }
+.bh-act.glyph { min-width: 34px; height: 34px; justify-content: center; border-radius: 999px; background: var(--sand); font-size: 15px; font-weight: 800; color: var(--ink-2); padding: 0 6px; }
+.bh-arrow { color: #c4c1b9; font-weight: 800; }
+.bh-ans { display: flex; gap: 8px; }
+.bh-at { position: relative; width: 64px; height: 80px; border-radius: 9px; overflow: hidden; background: var(--sand); box-shadow: 0 0 0 1px rgba(0, 0, 0, .07); }
+.bh-re { margin-left: auto; height: 32px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--line); font-size: 13px; font-weight: 800; cursor: pointer; }
+.bh-re:hover { box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+@media (prefers-reduced-motion: reduce) { .bh, .bh-in, .bh-in.zoom { animation: none; } }

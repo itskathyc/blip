@@ -1,0 +1,50 @@
+/* ---------- 빈칸: 드래그한 크기 그대로, 안의 요소는 --k로 함께 줄어듦 (기준 500×290) ---------- */
+.rg { --k: 1; position: fixed; z-index: 40; border: max(1.5px, calc(3px * var(--k))) dashed var(--dash); border-radius: calc(34px * var(--k)); background: rgba(255, 255, 255, .55); pointer-events: none; }
+.rg.done { background: #fff; pointer-events: auto; box-shadow: 0 12px 40px rgba(0, 0, 0, .08); }
+.rg .rx { position: absolute; right: calc(-22px * var(--k)); top: calc(-24px * var(--k)); width: calc(52px * var(--k)); height: calc(52px * var(--k)); padding: 0; border: max(1.5px, calc(3px * var(--k))) solid #222; border-radius: 50%; background: #fff; display: grid; place-items: center; cursor: pointer; }
+.rg .rx svg { width: 50%; height: 50%; }
+.rg .ri { position: absolute; left: 0; right: 0; top: calc(44px * var(--k)); display: flex; justify-content: space-evenly; padding: 0 calc(30px * var(--k)); }
+.rg .ic { position: relative; display: block; width: calc(62px * var(--k)); height: calc(62px * var(--k)); padding: 0; border: 0; border-radius: calc(14px * var(--k)); background: none; cursor: pointer; transition: transform .12s; }
+.rg .ic:hover { transform: translateY(-2px); }
+.rg .ic.on { transform: scale(.92); }
+.rg .ic img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: calc(14px * var(--k)); }
+.rg input { position: absolute; left: 28%; right: calc(24px * var(--k)); top: calc(136px * var(--k)); height: calc(52px * var(--k)); padding: 0; border: 0; outline: 0; background: none; font: 700 calc(30px * var(--k)) -apple-system, "Noto Sans KR", sans-serif; color: var(--ink); caret-color: var(--ink); }
+.rg .rnew { position: absolute; left: calc(40px * var(--k)); right: calc(40px * var(--k)); top: calc(46px * var(--k)); font: 800 calc(26px * var(--k)) -apple-system, "Noto Sans KR", sans-serif; letter-spacing: -.01em; }
+.rg.newmode input { left: calc(40px * var(--k)); top: calc(104px * var(--k)); }
+body.drawing, body.drawing * { cursor: crosshair !important; }
+
+/* ---------- 빈칸에서 만든 아이템: 격자에 붙어 지울 때까지 그 자리에 ---------- */
+.bfull { position: fixed; inset: 0; z-index: 35; pointer-events: none; }
+.bitem { position: absolute; width: 120px; display: flex; flex-direction: column; align-items: center; gap: 10px; font: 700 13.5px -apple-system, "Noto Sans KR", sans-serif; white-space: nowrap; pointer-events: auto; cursor: pointer; }
+.bitem .bic { width: 72px; height: 72px; border-radius: 18px; display: grid; place-items: center; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 2px 6px rgba(0, 0, 0, .08); font-size: 28px; font-weight: 800; color: var(--mute); }
+.bitem span { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+.bitem .bx { position: absolute; left: 14px; top: -6px; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: var(--ink); color: #fff; font-size: 13px; line-height: 22px; cursor: pointer; display: none; }
+.bfull.wiggle .bitem { animation: bWig .26s ease-in-out infinite alternate; }
+.bfull.wiggle .bitem:nth-child(2n) { animation-delay: -.13s; }
+.bfull.wiggle .bitem .bx { display: block; }
+@keyframes bWig { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
+
+/* ---------- 처음 쓰는 사람을 위한 시범 ---------- */
+.gh { position: fixed; inset: 0; z-index: 30; pointer-events: none; animation: ghIn .4s; transition: opacity .4s; }
+.gh.out { opacity: 0; }
+@keyframes ghIn { from { opacity: 0; } }
+.gh .rg { z-index: auto; opacity: .6; }
+.gh .rg.done { pointer-events: none; }
+.gh .ic { cursor: default; }
+.gh .ic.pop { animation: ghPop .3s cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes ghPop { from { opacity: 0; transform: scale(.6); } }
+.gh .caret { position: absolute; left: 28%; top: calc(140px * var(--k)); width: max(1.5px, calc(3px * var(--k))); height: calc(42px * var(--k)); background: var(--ink); animation: ghBlink 1s steps(1) infinite; }
+@keyframes ghBlink { 50% { opacity: 0; } }
+.gh .cur { position: absolute; width: 22px; height: 22px; margin: -2px 0 0 -3px; transition: transform .15s; }
+.gh .cur.down { transform: scale(.85); }
+.gh .cur svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .25)); }
+.gh .cur .x { display: none; }
+.gh .cur.drag .a { display: none; }
+.gh .cur.drag .x { display: block; }
+.gh .cap { position: absolute; transform: translateX(-50%); padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, .85); font: 700 14px -apple-system, "Noto Sans KR", sans-serif; color: var(--dash); white-space: nowrap; letter-spacing: -.01em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gh, .gh .cur, .gh .ic.pop { animation: none; transition: none; }
+  .gh .caret { animation: none; }
+  .bfull.wiggle .bitem { animation: none; }
+}

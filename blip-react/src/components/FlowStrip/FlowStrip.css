@@ -1,0 +1,79 @@
+/* 자리는 56px만 차지. 마우스를 올리면 Dynamic Island처럼 아래로 부풀어 아래 화면 위에 겹침 */
+.fs { position: relative; z-index: 40; flex: none; height: 56px; }
+
+.fs-bar {
+  --tw: 40; --ratio: 1; --stagger: 6;
+  position: absolute; left: 0; right: 0; top: 0;
+  height: 56px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 14px 0 16px;
+  background: var(--paper);
+  border-bottom: 1px solid #f0eee9;
+  transition: height .32s cubic-bezier(.2, 1, .3, 1), box-shadow .32s;
+  touch-action: pan-x;
+}
+.fs:not(.calm) .fs-bar:hover { --tw: 80; --ratio: 1.25; --stagger: 9; height: 128px; box-shadow: 0 18px 40px rgba(0, 0, 0, .08); }
+
+/* 미리보기: 기본은 정사각으로 자른 표지, 부풀면 4:5 전체 */
+.fs-cover { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.fs-cover > * { position: absolute; left: 0; top: 0; transform: scale(calc(var(--w) / 390)); transform-origin: top left; transition: transform .32s cubic-bezier(.2, 1, .3, 1); }
+
+.fs-import {
+  flex: none; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 10px;
+  background: none; box-shadow: inset 0 0 0 1.5px #d6d3cb; color: var(--mute);
+  font-size: 22px; font-weight: 300; line-height: 1; cursor: pointer;
+}
+.fs-import:hover { box-shadow: inset 0 0 0 1.5px var(--ink); color: var(--ink); }
+
+/* 결과 3개 → 얇은 선 → 예측 3개 (왼쪽부터, 읽는 순서대로) */
+.fs-flow { flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; transition: opacity .2s; }
+.fs-flow.waiting .fs-next { opacity: .4; }
+.fs-then { flex: none; width: 18px; height: 1.5px; border-radius: 1px; background: #d6d3cb; }
+.fs-next { flex: none; display: flex; align-items: center; gap: 8px; transition: opacity .2s; }
+.fs-tile.ghost { opacity: .45; box-shadow: 0 0 0 1px rgba(0, 0, 0, .05); }
+.fs-tile.ghost:hover { opacity: .9; }
+
+.fs-now { flex: none; display: flex; align-items: center; gap: 8px; }
+.fs-tile {
+  position: relative; flex: none;
+  width: calc(var(--tw) * 1px); height: calc(var(--tw) * var(--ratio) * 1px);
+  padding: 0; border: 0; border-radius: 9px; overflow: hidden; background: var(--sand);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .07); cursor: pointer;
+  transition: width .32s cubic-bezier(.2, 1, .3, 1), height .32s cubic-bezier(.2, 1, .3, 1), box-shadow .15s, transform .15s;
+  animation: fsIn .42s cubic-bezier(.2, 1, .3, 1) both;
+  animation-delay: calc(var(--k) * 70ms);
+}
+.fs-tile:hover { transform: translateY(-2px); }
+.fs-tile.cur { box-shadow: 0 0 0 2.5px var(--ink); }
+@keyframes fsIn { from { opacity: 0; transform: translateX(14px) scale(.7); } }
+
+/* 듣는 중: 다음 답이 올 자리가 숨 쉼 */
+.fs-listen {
+  flex: none; width: 0; height: 40px; margin-left: -12px; border-radius: 9px;
+  box-shadow: inset 0 0 0 1.5px transparent;
+  transition: width .25s, margin .25s;
+}
+.fs-listen.on { width: 40px; margin-left: 0; box-shadow: inset 0 0 0 1.5px #d6d3cb; background: var(--sand-2); animation: fsBreath 1.1s ease-in-out infinite; }
+@keyframes fsBreath { 50% { opacity: .35; transform: scale(.92); } }
+
+.fs-hand {
+  flex: none; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--sand); font-size: 16px; line-height: 1; cursor: pointer;
+  filter: grayscale(1); opacity: .55; transition: opacity .15s, background .15s, filter .15s;
+}
+.fs-hand:hover { opacity: .9; }
+.fs-hand.on { background: #e3edff; filter: none; opacity: 1; box-shadow: inset 0 0 0 1.5px var(--accent); }
+
+/* 아래로 끌어내리는 손잡이 */
+.fs-grab {
+  position: absolute; left: 50%; bottom: 4px; width: 38px; height: 5px; margin-left: -19px;
+  padding: 0; border: 0; border-radius: 99px; background: #dcd9d1; cursor: pointer;
+  transition: background .15s, width .15s, margin .15s;
+}
+.fs-grab:hover { background: var(--ink-2); width: 52px; margin-left: -26px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-bar, .fs-tile, .fs-cover > * { transition: none; }
+  .fs-tile { animation: none; }
+  .fs-listen.on { animation: none; }
+}

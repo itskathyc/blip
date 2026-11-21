@@ -1,0 +1,11 @@
+# 의존성 · 빌드 결과
+node_modules/
+dist/
+
+# 로그 · 시스템 파일
+*.log
+.DS_Store
+
+# 환경 변수 · 개인 설정
+.env*
+.claude/settings.local.json

@@ -1,0 +1,63 @@
+/* ---------- 지도 조각 ---------- */
+.pc.pc-map { max-width: none; padding: 0; background: none; box-shadow: none; }
+.mm { --bg: #fff; --land: #fff; --line: #1d1d1f; --ink: #1d1d1f; --pin: #e4572e;
+  position: relative; padding: 14px; border-radius: 16px; background: var(--bg); box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 8px 24px rgba(0, 0, 0, .1); color: var(--ink); }
+.mm-paper { --bg: #f4ecda; --land: #ead9b4; --line: #8a6d3b; --ink: #5b4423; --pin: #c0392b; }
+.mm-night { --bg: #1c1c1e; --land: #2c2c2e; --line: #8e8e93; --ink: #f2f2f7; --pin: #ffd60a; }
+.mm-name { display: block; margin: 0 0 8px; font-size: 13px; font-weight: 800; letter-spacing: -.01em; }
+.mm-geo { position: relative; }
+.mm-geo svg { display: block; width: 100%; height: auto; overflow: visible; }
+.mm-geo path { fill: var(--land); stroke: var(--line); stroke-width: 4; stroke-linejoin: round; }
+.mm-line .mm-geo path { stroke-width: 3.5; }
+.mm-paper .mm-geo path, .mm-night .mm-geo path { stroke-width: 3; }
+
+/* 갓 완성: 선이 그려지고 → 땅이 칠해짐 */
+.mm.born .mm-geo path { stroke-dasharray: 1; animation: mmDraw 1.4s ease-out both, mmFill .5s 1.2s both; }
+@keyframes mmDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes mmFill { from { fill: transparent; } }
+
+/* 핀 */
+.mm-pin { position: absolute; width: 0; height: 0; z-index: 1; }
+.mm-pin i { position: absolute; left: -9px; top: -24px; width: 18px; height: 18px; border-radius: 50% 50% 50% 0; background: var(--pin); transform: rotate(-45deg); box-shadow: 0 2px 6px rgba(0, 0, 0, .3); }
+.mm-pin i::after { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: var(--bg); }
+.mm-pin.dot i { left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; transform: none; }
+.mm-pin.dot i::after { display: none; }
+.mm-pin em { position: absolute; left: 12px; top: -30px; white-space: nowrap; padding: 3px 8px; border-radius: 8px; background: var(--bg); color: var(--ink); font-style: normal; font-size: 12px; font-weight: 800; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 3px 10px rgba(0, 0, 0, .12); }
+.mm-pin small { margin-left: 5px; font-size: 11px; font-weight: 600; opacity: .6; }
+.mm-miss { margin: 10px 0 0; font-size: 11.5px; font-weight: 600; opacity: .6; }
+
+/* 합친 직후: 합치는 중(1.4초) → 핀이 하나씩 떨어짐 → 못 찾은 곳 */
+.mm-busy { position: absolute; inset: 0; display: grid; place-content: center; grid-auto-flow: column; gap: 8px; align-items: center;
+  font-size: 13px; font-weight: 700; color: var(--ink); background: color-mix(in srgb, var(--bg) 70%, transparent); border-radius: 10px;
+  animation: mmBusy 1.6s both; pointer-events: none; }
+.mm-busy s { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: mmSpin .7s linear infinite; }
+@keyframes mmBusy { 0% { opacity: 0; } 12%, 80% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+@keyframes mmSpin { to { transform: rotate(360deg); } }
+.mm.live .mm-pin { animation: mmDrop .5s cubic-bezier(.3, 1.6, .5, 1) both; animation-delay: calc(1.7s + var(--i) * .6s); }
+.mm.live .mm-pin em { animation: mmFade .3s both; animation-delay: calc(2.1s + var(--i) * .6s); }
+.mm.live .mm-miss { animation: mmFade .4s both; animation-delay: calc(2.2s + var(--i) * .6s); }
+@keyframes mmDrop { from { opacity: 0; transform: translateY(-40px); } }
+@keyframes mmFade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .mm *, .mm.born .mm-geo path { animation-duration: .01s !important; animation-delay: 0s !important; } }
+
+/* ---------- 왼쪽: 지도 설계 대화 ---------- */
+.mc { height: 100%; display: flex; flex-direction: column; background: #fff; }
+.mc-log { flex: 1; overflow-y: auto; padding: 22px 20px 12px; display: flex; flex-direction: column; gap: 10px; }
+.mc-m { margin: 0; max-width: 86%; padding: 10px 14px; border-radius: 18px; font-size: 14.5px; line-height: 1.45; white-space: pre-line; animation: mcIn .28s cubic-bezier(.2, 1, .3, 1) both; }
+.mc-m.blip { align-self: flex-start; background: #f2f2f7; color: #1d1d1f; border-bottom-left-radius: 6px; }
+.mc-m.me { align-self: flex-end; background: #0a84ff; color: #fff; border-bottom-right-radius: 6px; }
+.mc-m.work { display: flex; align-items: center; gap: 8px; color: #6e6e73; }
+.mc-m.work s { width: 13px; height: 13px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: mmSpin .7s linear infinite; }
+.mc-typing { align-self: flex-start; display: flex; gap: 4px; padding: 12px 14px; border-radius: 18px; background: #f2f2f7; }
+.mc-typing i { width: 6px; height: 6px; border-radius: 50%; background: #8e8e93; animation: mcDot 1s infinite; }
+.mc-typing i:nth-child(2) { animation-delay: .15s; } .mc-typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes mcDot { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
+@keyframes mcIn { from { opacity: 0; transform: translateY(6px); } }
+.mc-opts { display: flex; flex-wrap: wrap; gap: 8px; animation: mcIn .28s .1s both; }
+.mc-opt { border: 0; padding: 8px 14px; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 1px #d1d1d6; font: inherit; font-size: 14px; font-weight: 600; color: #1d1d1f; cursor: pointer; }
+.mc-opt:hover { box-shadow: inset 0 0 0 1.5px #0a84ff; }
+.mc-opt.pv { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; border-radius: 14px; }
+.mc-opt.pv .mm { padding: 6px; border-radius: 10px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .06); }
+.mc-done { align-self: flex-start; width: 150px; animation: mcIn .3s both; }
+.mc-in { flex: none; margin: 0 14px 14px; padding: 10px 14px; border: 0; border-radius: 999px; background: #f2f2f7; font: inherit; font-size: 14px; outline: none; }
+.mc-in:focus { box-shadow: inset 0 0 0 1.5px #0a84ff; }

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>빈칸선언 - 어디서든 드래그 → 점선 영역 + 아이콘 줄 + 입력</title>
+<!-- 원본: ver3.html 108행·188행(.rnew/.newmode), 241~253행(점선 영역 CSS), 1026~1106행(JS)
+     + ver3-designer.html 1082~1131행(정리된 버전: NODRAW, regionIcons, 아이콘 줄 클릭 위임) -->
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:#fff;font-family:-apple-system,"Noto Sans KR",sans-serif;color:#111;user-select:none;-webkit-user-select:none}
+  /* ---------- 점선 영역: 어디서든 드래그 ---------- */
+  /* 점선 영역: 드래그한 크기 그대로. 안의 아이콘·커서·X는 --k(기준 500×290 대비 비율)로 함께 줄어듦 */
+  .rg{--k:1;position:fixed;z-index:40;border:max(1.5px,calc(3px*var(--k))) dashed #3f4a3a;border-radius:calc(34px*var(--k));background:rgba(255,255,255,.55);pointer-events:none}
+  .rg.done{background:#fff;pointer-events:auto;box-shadow:0 12px 40px rgba(0,0,0,.08)}
+  .rg .rx{position:absolute;right:calc(-22px*var(--k));top:calc(-24px*var(--k));width:calc(52px*var(--k));height:calc(52px*var(--k));border-radius:50%;border:max(1.5px,calc(3px*var(--k))) solid #222;background:#fff;display:grid;place-items:center;cursor:pointer;padding:0}
+  .rg .rx svg{width:50%;height:50%}
+  .rg .ri{position:absolute;left:0;right:0;top:calc(44px*var(--k));display:flex;justify-content:space-evenly;padding:0 calc(30px*var(--k))}
+  .rg .ri button{position:relative;width:calc(62px*var(--k));height:calc(62px*var(--k));border:0;padding:0;background:none;cursor:pointer;border-radius:calc(14px*var(--k));transition:transform .12s}
+  .rg .ri button:hover{transform:translateY(-2px)}
+  .rg .ri button.on{transform:scale(.92)}
+  .rg .ri img{width:100%;height:100%;object-fit:contain;display:block;border-radius:calc(14px*var(--k))}
+  .rg input{position:absolute;left:28%;right:calc(24px*var(--k));top:calc(136px*var(--k));height:calc(52px*var(--k));padding:0;border:0;outline:0;background:none;font:700 calc(30px*var(--k)) -apple-system,"Noto Sans KR",sans-serif;color:#111;caret-color:#111;user-select:text;-webkit-user-select:text}
+  /* New → 새로운 아이템선언 모드 */
+  .rg .rnew{position:absolute;left:calc(40px*var(--k));right:calc(40px*var(--k));top:calc(46px*var(--k));font:800 calc(26px*var(--k)) -apple-system,"Noto Sans KR",sans-serif;color:#111;letter-spacing:-.01em}
+  .rg.newmode input{left:calc(40px*var(--k));top:calc(104px*var(--k))}
+  body.drawing,body.drawing *{cursor:crosshair!important}
+  /* 아이템선언 결과: 그 자리에 생기는 아이콘 (원본의 .app/.aic 모양) */
+  .app{position:absolute;width:120px;border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;font:700 14.5px -apple-system,"Noto Sans KR",sans-serif;color:#111;white-space:nowrap}
+  .aic{width:76px;height:76px;border-radius:18px;display:grid;place-items:center;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.08);background:#fff;overflow:hidden}
+  .app span{max-width:140px;overflow:hidden;text-overflow:ellipsis}
+  /* ---------- 처음 쓰는 사람을 위한 시범: 커서가 직접 빈칸을 그려 열어 보임 ---------- */
+  .gh{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:0;transition:opacity .4s}
+  .gh.on{opacity:1}
+  .gh .rg{z-index:auto;opacity:.6;transition:background .25s,box-shadow .25s}
+  .gh .rg.done{pointer-events:none}
+  .gh .ri button{cursor:default;opacity:0;transform:scale(.6);transition:opacity .25s,transform .3s cubic-bezier(.2,1.4,.4,1)}
+  .gh .ri button.pop{opacity:1;transform:none}
+  .gh .caret{position:absolute;left:28%;top:calc(140px*var(--k));width:max(1.5px,calc(3px*var(--k)));height:calc(42px*var(--k));background:#111;opacity:0}
+  .gh .rg.done .caret{animation:ghBlink 1s steps(1) infinite}
+  @keyframes ghBlink{0%{opacity:1}50%{opacity:0}}
+  .gh .cur{position:absolute;width:22px;height:22px;margin:-2px 0 0 -3px;transition:transform .15s}
+  .gh .cur.down{transform:scale(.85)}
+  .gh .cur svg{width:100%;height:100%;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
+  .gh .cur .x{display:none}
+  .gh .cur.drag .a{display:none}
+  .gh .cur.drag .x{display:block}
+  .gh .cap{position:absolute;transform:translateX(-50%);font:700 14px -apple-system,"Noto Sans KR",sans-serif;color:#3f4a3a;white-space:nowrap;letter-spacing:-.01em}
+  @media (prefers-reduced-motion:reduce){.gh,.gh .cur,.gh .ri button{transition:none}.gh .rg.done .caret{animation:none;opacity:1}}
+</style>
+</head>
+<body>
+<div id="full" style="position:fixed;inset:0"></div>
+<script>
+(()=>{
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const RX = '<button class="rx" title="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="4.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>';
+  // 원본 주석: 지금은 기존 제품. 나중에 사용자가 정의한 동적객체로 교체
+  const ACTIONS = [
+    {k:"new", t:"새로운 아이템선언", src:"icons/ic-new.png"},
+    {k:"claude", t:"Claude", src:"icons/ic-claude.png"},
+    {k:"kakao", t:"카카오톡", src:"icons/ic-kakao.png"},
+    {k:"excel", t:"Excel", src:"icons/ic-excel.png"},
+  ];
+  const regionIcons = () => ACTIONS.map(a=>'<button data-a="'+a.k+'" title="'+esc(a.t)+'"><img src="'+a.src+'" alt="'+esc(a.t)+'"></button>').join("");
+  let dr = null, rgEl = null, suppressClick = false, uid = 0;
+  const items = [];
+  function closeRegion(){ if(rgEl){ rgEl.remove(); rgEl = null; } }
+  const NODRAW = ".rg, .app";
+
+  /* 처음 쓰는 사람에게: 반투명 커서가 직접 빈칸을 그려 여는 시범. 직접 한 번 열면 다시 나오지 않음 */
+  const LEARN_KEY = "blip.blankDeclare.learned";
+  const learned = () => { try { return localStorage.getItem(LEARN_KEY) === "1" } catch (err) { return false } };
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const CUR = '<svg class="a" viewBox="0 0 24 24"><path d="M4 2l15 11.5-6.6.9 3.8 7.4-2.9 1.4-3.8-7.5L4 20.4z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>' +
+    '<svg class="x" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M12 3v18M3 12h18" stroke="#111" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  let gh = null, ghTimers = [], ghRaf = 0, ghIdle = 0;
+  const later = (ms, f) => ghTimers.push(setTimeout(f, ms));
+  function ghostStop(){
+    ghTimers.forEach(clearTimeout); ghTimers = []; cancelAnimationFrame(ghRaf);
+    if(gh){ const g = gh; gh = null; g.classList.remove("on"); setTimeout(()=>g.remove(), 400); }
+  }
+  function ghostSchedule(ms){
+    clearTimeout(ghIdle); if(learned()) return;
+    ghIdle = setTimeout(()=>{ if(!rgEl && !dr && !learned()) ghostPlay(); }, ms);
+  }
+  function ghostPlay(){
+    ghostStop();
+    const W = Math.min(340, innerWidth * .5), H = W * 290 / 500, x0 = innerWidth / 2 - W / 2, y0 = innerHeight / 2 - H / 2;
+    gh = document.createElement("div"); gh.className = "gh"; gh.setAttribute("aria-hidden", "true");
+    gh.innerHTML = '<div class="rg"></div><div class="cur">' + CUR + '</div><div class="cap">드래그해서 빈칸을 열어보세요</div>';
+    document.body.appendChild(gh);
+    const rg = gh.querySelector(".rg"), cur = gh.querySelector(".cur"), cap = gh.querySelector(".cap");
+    Object.assign(cap.style, {left:innerWidth / 2 + "px", top:y0 + H + 22 + "px"});
+    const place = (w, h) => Object.assign(rg.style, {left:x0 + "px", top:y0 + "px", width:w + "px", height:h + "px"});
+    const open = () => {
+      rg.style.setProperty("--k", Math.min(W / 500, H / 290)); rg.classList.add("done");
+      rg.innerHTML = '<div class="ri">' + regionIcons() + '</div><div class="caret"></div>';
+      rg.querySelectorAll(".ri button").forEach((b, i) => reduced ? b.classList.add("pop") : later(90 * i, ()=>b.classList.add("pop")));
+    };
+    requestAnimationFrame(()=>{ if(gh) gh.classList.add("on"); });
+    if(reduced){ place(W, H); open(); cur.style.display = "none"; return; }
+    rg.style.display = "none";
+    Object.assign(cur.style, {left:x0 + "px", top:y0 + "px"});
+    later(550, ()=>cur.classList.add("down"));
+    const D = 1100;
+    let finished = false;
+    const drawTo = p => { const w = W * p, h = H * p; place(w, h); cur.style.left = x0 + w + "px"; cur.style.top = y0 + h + "px"; };
+    const finish = () => {
+      if(finished || !gh) return; finished = true; cancelAnimationFrame(ghRaf);
+      drawTo(1); cur.classList.remove("down", "drag"); open();
+    };
+    later(750, ()=>{
+      rg.style.display = ""; cur.classList.add("drag");
+      const t0 = performance.now();
+      const step = now => {
+        if(!gh || finished) return;
+        const t = Math.min(1, (now - t0) / D);
+        if(t >= 1) { finish(); return; }
+        drawTo(ease(t)); ghRaf = requestAnimationFrame(step);
+      };
+      ghRaf = requestAnimationFrame(step);
+    });
+    later(750 + D + 60, finish); // 애니메이션 프레임이 멈춰도(백그라운드 탭 등) 그리기는 반드시 끝남
+    later(4300, ()=>{ if(gh) gh.classList.remove("on"); });
+    later(4800, ()=>{ if(gh){ gh.remove(); gh = null; } ghostSchedule(1800); });
+  }
+
+  function renderItems(){
+    $("#full").innerHTML = items.map(it=>'<button class="app" data-id="'+it.id+'" style="left:'+it.x+'px;top:'+it.y+'px"><div class="aic"></div><span>'+esc(it.name)+'</span></button>').join("");
+  }
+  // New → 그 영역이 "새로운 아이템선언" 입력칸이 됨. 입력 후 Enter → 그 자리에 아이템 아이콘
+  function newObjectMode(el){
+    el.classList.add("newmode"); el.querySelector(".ri").remove();
+    const t = document.createElement("div"); t.className = "rnew"; t.textContent = "새로운 아이템선언"; el.appendChild(t);
+    const inp = el.querySelector("input"); inp.value = ""; inp.focus();
+    inp.addEventListener("keydown", e=>{
+      if(e.key !== "Enter" || e.isComposing) return; e.preventDefault();
+      const v = inp.value.trim(); if(!v) return;
+      const r = el.getBoundingClientRect();
+      items.push({id:"n"+(++uid), name:v, x:Math.round(r.left + r.width/2 - 60), y:Math.round(r.top + r.height/2 - 60)});
+      closeRegion(); renderItems();
+    });
+  }
+
+  addEventListener("pointerdown", e=>{
+    ghostStop(); clearTimeout(ghIdle);
+    if(e.button !== 0 || !e.target.closest) return;
+    if(rgEl && !e.target.closest(".rg") && e.target.closest(NODRAW)) closeRegion();
+    if(e.target.closest(NODRAW)) return;
+    const was = !!rgEl; if(was) closeRegion(); // 점선 영역 밖 어디든 누르면 꺼짐 (그 클릭은 다른 동작 안 함)
+    dr = {x:e.clientX, y:e.clientY, on:false, el:null, eat:was};
+  });
+  addEventListener("pointermove", e=>{
+    if(!dr) return;
+    if(!dr.on){ if(Math.hypot(e.clientX - dr.x, e.clientY - dr.y) < 6) return; dr.on = true; closeRegion(); dr.el = document.createElement("div"); dr.el.className = "rg"; document.body.appendChild(dr.el); document.body.classList.add("drawing"); }
+    Object.assign(dr.el.style, {left:Math.min(dr.x, e.clientX)+"px", top:Math.min(dr.y, e.clientY)+"px", width:Math.abs(e.clientX - dr.x)+"px", height:Math.abs(e.clientY - dr.y)+"px"});
+  });
+  addEventListener("pointerup", ()=>{
+    if(!dr){ ghostSchedule(5000); return; } const d = dr; dr = null;
+    if(!d.on){ if(d.eat){ suppressClick = true; setTimeout(()=>suppressClick = false, 0); } ghostSchedule(5000); return; }
+    try { localStorage.setItem(LEARN_KEY, "1"); } catch (err) {}
+    suppressClick = true; setTimeout(()=>suppressClick = false, 0); document.body.classList.remove("drawing");
+    const el = d.el, r = el.getBoundingClientRect(); // 드래그한 크기 그대로
+    el.style.setProperty("--k", Math.min(r.width/500, r.height/290)); el.classList.add("done");
+    el.innerHTML = RX+'<div class="ri">'+regionIcons()+'</div><input type="text" spellcheck="false" aria-label="입력">';
+    rgEl = el; const inp = el.querySelector("input");
+    el.querySelector(".rx").addEventListener("click", closeRegion);
+    el.querySelector(".ri").addEventListener("click", e=>{
+      const b = e.target.closest("button[data-a]"); if(!b) return; e.stopPropagation();
+      if(b.dataset.a === "new"){ newObjectMode(el); return; }
+      el.querySelectorAll(".ri button").forEach(x=>x.classList.toggle("on", x === b && !b.classList.contains("on"))); // 고른 아이콘 표시
+    });
+    inp.addEventListener("keydown", e=>{
+      if(e.key !== "Enter" || e.isComposing || el.classList.contains("newmode")) return; e.preventDefault();
+      const q = inp.value.trim(); if(!q) return;
+      closeRegion();
+      // 원본(디자이너 버전): 판 위면 그 자리에 검색 결과 창, 아니면 구글 검색
+      window.open("https://www.google.com/search?q="+encodeURIComponent(q), "_blank", "noopener");
+    });
+    setTimeout(()=>inp.focus(), 0);
+  });
+  addEventListener("keydown", e=>{ if(e.key === "Escape") closeRegion(); });
+  ghostSchedule(1200);
+})();
+</script>
+</body>
+</html>

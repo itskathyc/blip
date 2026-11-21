@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>layer slider - ver3 (평면 겹침 + dock + 아이팟 휠)</title>
+<!-- 원본: ver3.html 28~45행(화면 A 커버플로우 CSS), 230~239행(dock CSS), 282행(HTML), 344~387행(크기·커버플로우 JS), 401~410행(renderDock), 501~521행(휠·키보드) -->
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:#fff;font-family:-apple-system,"Noto Sans KR",sans-serif;color:#111;user-select:none;-webkit-user-select:none}
+  /* ---------- 화면 A: 커버플로우 (평면 겹침) ---------- */
+  #flow{position:fixed;left:0;right:0;top:0;bottom:182px;perspective:1500px;transition:opacity .35s}
+  #cfWrap{position:absolute;inset:0;perspective:1500px;perspective-origin:50% 46%}
+  .cf{position:absolute;left:50%;top:52%;border-radius:18px;overflow:hidden;background:#fff;
+    box-shadow:0 0 0 1px rgba(0,0,0,.07),0 18px 40px rgba(0,0,0,.10);transition:transform .5s cubic-bezier(.2,.9,.25,1),width .5s cubic-bezier(.2,.9,.25,1),height .5s cubic-bezier(.2,.9,.25,1),margin .5s cubic-bezier(.2,.9,.25,1),border-radius .5s,opacity .4s;cursor:pointer}
+  /* 평면 겹침: 옆 화면은 가운데와 같은 크기로 뒤에 겹쳐 있고, 바깥쪽 가장자리만 띠처럼 보임 */
+  .cf{border-radius:6px;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .35s;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+  .cf.side{box-shadow:0 0 0 1px rgba(0,0,0,.1),0 0 18px rgba(0,0,0,.10)}
+  .cf.far{opacity:0;pointer-events:none}
+  .cf .thumb{position:absolute;inset:0;background:#fff center top/cover no-repeat}
+  .cf.ghost{background:#f4f4f4;box-shadow:0 0 0 1px rgba(0,0,0,.04);cursor:default;-webkit-box-reflect:none}
+  .cf .mini{position:absolute;left:0;top:0;width:1280px;height:800px;transform-origin:0 0;pointer-events:none}
+  /* ---------- dock: 레이어 슬라이더 ---------- */
+  #dock{position:fixed;left:50%;bottom:18px;z-index:20;transform:translateX(-50%);width:min(760px,calc(100vw - 40px));height:112px;border-radius:24px;
+    background:rgba(255,255,255,.75);backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);box-shadow:0 0 0 .5px rgba(0,0,0,.08),0 10px 30px rgba(0,0,0,.08);overflow:hidden}
+  #dockRow{position:absolute;top:14px;left:50%;height:84px;display:flex;gap:10px;transition:transform .45s cubic-bezier(.2,.9,.25,1)}
+  .dk{position:relative;flex:none;width:134px;height:84px;border-radius:12px;overflow:hidden;background:#f3f3f3;cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.06);transition:box-shadow .2s,opacity .3s}
+  .dk.cur{box-shadow:0 0 0 2.5px #111}
+  .dk.plus{display:grid;place-items:center;background:#fff;box-shadow:inset 0 0 0 1.5px #d6d6d6}
+  .dk.plus.cur{box-shadow:inset 0 0 0 1.5px #d6d6d6,0 0 0 2.5px #111}
+  .dk.plus span{font:300 34px -apple-system,sans-serif;color:#9a9a9a}
+  .dk .mini{position:absolute;left:0;top:0;width:1280px;height:800px;transform-origin:0 0;transform:scale(.1047);pointer-events:none}
+  .dk .thumb{position:absolute;inset:0;background:#fff center top/cover no-repeat}
+  .dk i{position:absolute;left:0;right:0;bottom:0;padding:12px 6px 4px;font:700 10.5px -apple-system,"Noto Sans KR",sans-serif;font-style:normal;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.55));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
+</head>
+<body>
+<div id="flow"><div id="cfWrap"></div></div>
+<div id="dock"><div id="dockRow"></div></div>
+<script>
+(()=>{
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  // 원본: CANVASES = 사용자가 만든 화면(장). 여기서는 빈 장
+  const blank = n => ({t:"장 "+n, html:()=>'<div style="position:absolute;inset:0;background:#fff"></div>'});
+  const CANVASES = [blank(1), blank(2), blank(3), blank(4), blank(5)];
+  let idxA = 2;
+  const list = () => CANVASES.map(c=>({t:c.t, kind:"canvas", c}));
+  const idx = () => idxA;
+  function setIdx(i){ const n = CANVASES.length; i = Math.max(0, Math.min(n-1, i)); idxA = i; render(); }
+
+  /* ---------- 크기 ---------- */
+  function sizes(){
+    const H = innerHeight - 150, cw = Math.min(innerWidth*0.62, H*0.8*1.6, 1600), ch = cw/1.6;
+    document.documentElement.style.setProperty("--cw", cw+"px"); document.documentElement.style.setProperty("--ch", ch+"px");
+    return {cw, ch};
+  }
+
+  /* ---------- 커버플로우 (가운데 기준 좌우 같은 개수) ---------- */
+  const SIDE = 2;
+  function miniFor(item, w){ const c = item.c; return '<div class="mini" style="transform:scale('+(w/1280)+')">'+c.html()+'</div>'; }
+  // 가운데 기준 좌우 2장씩. 띠 폭은 화면 폭 비율 (안쪽 띠, 바깥 띠)
+  const CF = window.CF = {s1:0.085, s2:0.08};
+  function slotTf(o, cw){
+    if(o === 0) return {tf:"translate3d(0,0,0)", z:50};
+    const a = Math.abs(o), sgn = Math.sign(o), x = sgn*(innerWidth*CF.s1 + (a > 1 ? innerWidth*CF.s2 : 0) + (a > 2 ? innerWidth*CF.s2 : 0));
+    return {tf:"translate3d("+x+"px,0,0)", z:50 - a};
+  }
+  function renderFlow(){
+    const {cw, ch} = sizes(), wrap = $("#cfWrap"); wrap.style.perspective = "none";
+    if(wrap.dataset.n !== String(CANVASES.length) || wrap.dataset.cw !== String(cw)){ // 장을 한 번 만들어 두고 위치만 바꿔서 미끄러지게
+      wrap.innerHTML = CANVASES.map((c, i)=>'<div class="cf" data-i="'+i+'" style="width:'+cw+'px;height:'+ch+'px;margin:'+(-ch/2)+'px 0 0 '+(-cw/2)+'px">'+miniFor({c}, cw)+'</div>').join("");
+      wrap.dataset.n = CANVASES.length; wrap.dataset.cw = cw;
+    }
+    wrap.querySelectorAll(".cf[data-i]").forEach(el=>{
+      const o = +el.dataset.i - idxA, oc = Math.max(-SIDE-1, Math.min(SIDE+1, o)), t = slotTf(oc, cw);
+      el.style.transform = t.tf; el.style.zIndex = t.z;
+      el.classList.toggle("side", o !== 0); el.classList.toggle("far", Math.abs(o) > SIDE);
+    });
+    // 가운데 기준 좌우 같은 개수: 장이 없는 자리는 빈 장
+    wrap.querySelectorAll(".cf.ghost").forEach(n=>n.remove());
+    for(let o = -SIDE; o <= SIDE; o++){
+      if(o === 0 || CANVASES[idxA + o]) continue;
+      const t = slotTf(o, cw), g = document.createElement("div"); g.className = "cf side ghost";
+      Object.assign(g.style, {width:cw+"px", height:ch+"px", margin:(-ch/2)+"px 0 0 "+(-cw/2)+"px", transform:t.tf, zIndex:t.z, transition:"none"});
+      wrap.appendChild(g);
+    }
+  }
+
+  /* ---------- dock ---------- */
+  function renderDock(){
+    const L = list(), i0 = idx(), row = $("#dockRow");
+    row.innerHTML = L.map((it, i)=>{
+      if(it.kind === "plus") return '<div class="dk plus'+(i===i0?' cur':'')+'" data-i="'+i+'" title="새로 켜기"><span>+</span></div>';
+      return '<div class="dk'+(i===i0?' cur':'')+'" data-i="'+i+'"><div class="mini">'+it.c.html()+'</div><i>'+esc(it.t)+'</i></div>';
+    }).join("");
+    row.style.transform = 'translateX('+(-(i0*144 + 67))+'px)'; // 지금 장이 dock 가운데
+  }
+  function render(){ renderFlow(); renderDock(); }
+
+  // 클릭: 옆 장 / dock 카드 → 그 장으로
+  $("#cfWrap").addEventListener("click", e=>{ const c = e.target.closest(".cf[data-i]"); if(c) setIdx(+c.dataset.i); });
+  $("#dockRow").addEventListener("click", e=>{ const d = e.target.closest(".dk[data-i]"); if(d) setIdx(+d.dataset.i); });
+
+  /* ---------- 아이팟 휠: 세로 스크롤 = 좌우 이동 ---------- */
+  let acc = 0, lastT = 0;
+  addEventListener("wheel", e=>{
+    e.preventDefault();
+    const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    const t = performance.now(); if(t - lastT > 220) acc = 0; lastT = t;
+    acc += d; const step = 46;
+    while(Math.abs(acc) >= step){ const s = Math.sign(acc); acc -= s*step; setIdx(idx() + s); }
+  }, {passive:false});
+  addEventListener("keydown", e=>{
+    if(e.key === "ArrowRight" || e.key === "ArrowDown"){ e.preventDefault(); setIdx(idx()+1); }
+    else if(e.key === "ArrowLeft" || e.key === "ArrowUp"){ e.preventDefault(); setIdx(idx()-1); }
+  });
+  addEventListener("resize", render);
+  render();
+})();
+</script>
+</body>
+</html>

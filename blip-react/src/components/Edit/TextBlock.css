@@ -1,0 +1,34 @@
+/* 콘텐츠 안에 끼워 넣은 글 칸 */
+.tb { position: relative; box-sizing: border-box; max-width: 100%; margin: 2px 0 10px; padding: 4px 6px; border-radius: 6px; animation: tbIn .35s cubic-bezier(.2, 1, .3, 1) both; cursor: default; }
+@keyframes tbIn { from { opacity: 0; transform: translateY(-4px); } }
+.tb:hover, .tb.editing { box-shadow: inset 0 0 0 1px rgba(10, 132, 255, .55); }
+.tb-text { min-height: 1.4em; line-height: 1.45; font-weight: 500; white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; outline: 0; }
+.tb.editing .tb-text { cursor: text; }
+.tb-rs { position: absolute; right: -5px; bottom: -5px; width: 10px; height: 10px; border-radius: 2px; background: #fff; box-shadow: 0 0 0 1.5px #0a84ff; cursor: nwse-resize; opacity: 0; transition: opacity .12s; touch-action: none; }
+.tb:hover .tb-rs, .tb.editing .tb-rs { opacity: 1; }
+
+/* 텍스트 에디터 (피그마 메뉴처럼 어두운 판) */
+.te { position: fixed; z-index: 75; width: 244px; padding: 10px; border-radius: 13px; background: #1e1e1e; color: #fff; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .6), 0 10px 32px rgba(0, 0, 0, .35); font: 500 11.5px -apple-system, "Apple SD Gothic Neo", sans-serif; animation: teIn .12s ease-out; user-select: none; }
+@keyframes teIn { from { opacity: 0; transform: translateY(-3px); } }
+.te-h { margin: 0 0 8px; font-size: 11px; font-weight: 600; color: rgba(255, 255, 255, .5); }
+.te-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.te button { border: 0; color: inherit; font: inherit; cursor: pointer; }
+.te-fonts button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 5px; border-radius: 8px; background: rgba(255, 255, 255, .06); }
+.te-fonts b { font-size: 17px; font-weight: 600; line-height: 1; }
+.te-fonts span { font-size: 10px; color: rgba(255, 255, 255, .55); }
+.te-fonts button.on { background: #0d99ff; }
+.te-fonts button.on span { color: #fff; }
+.te-seg { display: flex; padding: 2px; border-radius: 8px; background: rgba(255, 255, 255, .06); }
+.te-seg button { width: 30px; height: 26px; border-radius: 6px; background: none; display: grid; place-items: center; color: rgba(255, 255, 255, .7); }
+.te-seg button.on { background: rgba(255, 255, 255, .16); color: #fff; }
+.te-size { margin-left: auto; display: flex; align-items: center; height: 30px; padding: 0 2px; border-radius: 8px; background: rgba(255, 255, 255, .06); }
+.te-size button { width: 24px; height: 26px; border-radius: 6px; background: none; font-size: 15px; }
+.te-size button:hover, .te-seg button:hover:not(.on), .te-fonts button:hover:not(.on) { background: rgba(255, 255, 255, .12); }
+.te-size input { width: 30px; border: 0; outline: 0; background: none; color: #fff; font: 600 12px -apple-system, sans-serif; text-align: center; -moz-appearance: textfield; }
+.te-size input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.te-range { display: block; width: 100%; margin: 0 0 10px; accent-color: #0d99ff; }
+.te-colors { margin: 0; }
+.te-colors button { width: 22px; height: 22px; padding: 0; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .15); }
+.te-colors button.on { box-shadow: 0 0 0 2px #1e1e1e, 0 0 0 3.5px #fff; }
+.te-pick { position: relative; width: 22px; height: 22px; margin-left: auto; border-radius: 50%; background: conic-gradient(#f44, #fd4, #4d4, #4df, #44f, #f4f, #f44); cursor: pointer; overflow: hidden; }
+.te-pick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }

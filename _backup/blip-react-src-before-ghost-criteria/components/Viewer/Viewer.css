@@ -1,0 +1,22 @@
+.viewer-box {
+  flex: 1;
+  min-height: 0;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.viewer {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 20px 50px rgba(0, 0, 0, .1);
+}
+
+.viewer-inner {
+  width: calc(var(--view-w) * 1px);
+  height: calc(var(--view-h) * 1px);
+  transform-origin: top left;
+}

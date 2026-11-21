@@ -1,0 +1,25 @@
+.imp-back { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(17, 17, 17, .28); animation: impFade .18s; }
+.imp-modal { width: min(440px, calc(100vw - 32px)); padding: 22px 22px 18px; border-radius: 22px; background: var(--paper); box-shadow: 0 24px 60px rgba(0, 0, 0, .22); animation: impUp .22s cubic-bezier(.2, 1.2, .4, 1); }
+.imp-modal h2 { flex: 1; min-width: 0; margin: 0; font-size: 19px; font-weight: 900; letter-spacing: -.02em; }
+.imp-modal textarea { width: 100%; resize: none; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 14px; outline: 0; font: 600 14px/1.55 -apple-system, "Noto Sans KR", sans-serif; color: var(--ink); user-select: text; }
+.imp-modal textarea:focus { border-color: var(--ink); }
+.imp-miss { margin: 8px 2px 0; font-size: 12.5px; font-weight: 700; color: #e2483d; }
+.imp-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+.imp-row button { height: 36px; padding: 0 16px; border: 0; border-radius: 999px; font-size: 13px; font-weight: 800; cursor: pointer; }
+.imp-sample { background: none; color: var(--mute); text-decoration: underline; text-underline-offset: 3px; padding: 0 4px !important; }
+.imp-go { background: var(--ink); color: #fff; }
+.imp-go:disabled { opacity: .3; cursor: default; }
+@keyframes impFade { from { opacity: 0; } }
+@keyframes impUp { from { opacity: 0; transform: translateY(12px) scale(.97); } }
+@media (prefers-reduced-motion: reduce) { .imp-back, .imp-modal { animation: none; } }
+.imp-tags { display: flex; gap: 6px; margin-top: 10px; }
+.imp-tag { height: 32px; padding: 0 13px; border: 0; border-radius: 999px; background: var(--sand); color: var(--ink); font-size: 12.5px; font-weight: 800; cursor: pointer; display: inline-grid; place-items: center; }
+.imp-tag:hover { background: #e8e6df; }
+.imp-tag.gpt { width: 32px; padding: 0; background: var(--ink); color: #fff; }
+.imp-tag.gpt:hover { background: #000; }
+.imp-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.imp-switch { flex: none; height: 30px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--sand); color: var(--ink-2); font-size: 12px; font-weight: 800; cursor: pointer; }
+.imp-switch:hover { background: #e8e6df; color: var(--ink); }
+.imp-switch span { margin-right: 2px; }
+.imp-x { flex: none; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--mute); font-size: 22px; line-height: 1; cursor: pointer; }
+.imp-x:hover { background: var(--sand); color: var(--ink); }

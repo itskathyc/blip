@@ -1,0 +1,78 @@
+.slider {
+  position: relative;
+  flex: none;
+  max-width: 100%;
+  min-height: 87px; /* 비어 있어도 양쪽 화면 높이가 맞도록 */
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  transition: background .2s, box-shadow .2s;
+}
+
+.slider::-webkit-scrollbar { display: none; }
+.slider.over { background: #eef4ff; box-shadow: inset 0 0 0 2px var(--accent); }
+
+/* 4:5 게시물 이미지를 60px 폭 카드로 축소 */
+.lcard {
+  position: relative;
+  flex: none;
+  width: 60px;
+  height: 75px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: var(--paper);
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px var(--line);
+  transition: box-shadow .2s, transform .15s, opacity .2s;
+}
+
+.lcard:hover { transform: translateY(-2px); }
+.lcard.cur { box-shadow: 0 0 0 2.5px var(--ink); }
+.lcard.draft .lcard-scale { opacity: .5; }
+.slider.idle .lcard:not(.lcard-add) { opacity: .55; }
+.slider.idle .lcard:hover { opacity: 1; }
+
+.lcard.fresh { animation: lcIn .5s cubic-bezier(.2, 1.3, .4, 1); }
+@keyframes lcIn { from { transform: translateY(14px) scale(.7); opacity: 0; } }
+
+.lcard-scale {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: scale(calc(60 / 390));
+  transform-origin: top left;
+  pointer-events: none;
+}
+
+.lcard-add {
+  display: grid;
+  place-items: center;
+  background: none;
+  box-shadow: inset 0 0 0 1.5px #d6d3cb;
+  font-size: 24px;
+  font-weight: 300;
+  color: var(--mute);
+}
+
+.lcard-add:hover { box-shadow: inset 0 0 0 1.5px var(--ink); color: var(--ink); }
+
+.slider-drop {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  pointer-events: none;
+}
