@@ -1,0 +1,24 @@
+/* 커밋 로그: 어두운 바탕 · 손글씨 같은 큰 제목 · 고정폭 해시 · 왼쪽 그래프 */
+.cl { position: absolute; inset: 0; padding: 34px 26px 20px; background: #16171c; color: #e8e8ea; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif; }
+.cl-h { margin: 0; font-family: "Nanum Brush Script", "Nanum Pen Script", "Apple SD Gothic Neo", serif; font-size: 40px; font-weight: 800; letter-spacing: -.02em; color: #fff; }
+.cl-sub { display: inline-block; margin: 4px 0 18px; padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, .18); font-size: 14px; color: #8fb3b8; }
+.cl-body { display: flex; gap: 4px; }
+.cl-graph line, .cl-graph polyline { stroke: #5c6470; stroke-width: 2; fill: none; }
+.cl-graph polyline { stroke: #8fb3b8; }
+.cl-graph circle { fill: #16171c; stroke: #8a929c; stroke-width: 2; transition: r .15s, stroke .15s; }
+.cl-graph circle.head { fill: #e0b04a; stroke: #e0b04a; }
+.cl-graph circle.on { stroke: #fff; stroke-width: 2.5; }
+.cl-list { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 0; }
+.cl-list .cl-row { display: block; width: 100%; padding: 2px 6px; border: 0; border-radius: 8px; background: none; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.cl-list li.on .cl-row { background: rgba(255, 255, 255, .06); }
+.cl-hash { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: #7c8592; margin-right: 8px; }
+.cl-list li:last-child .cl-hash { color: #fff; }
+.cl-list b { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; font-weight: 600; color: #a8d0d4; }
+.cl-msg { display: block; margin-top: 2px; font-size: 12px; color: #dcdce0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cl-headref { margin: 2px 0 0; font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #e0b04a; }
+/* 화면 미리보기 (그때의 첫 장) */
+.cl-prev { position: absolute; right: 18px; bottom: 16px; margin: 0; width: 118px; animation: clIn .2s ease-out; }
+@keyframes clIn { from { opacity: 0; transform: translateY(6px); } }
+.cl-prev-in { width: 118px; height: 148px; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, .2), 0 10px 26px rgba(0, 0, 0, .5); }
+.cl-prev-in > .sl { transform: scale(calc(118 / 390)); transform-origin: top left; pointer-events: none; }
+.cl-prev figcaption { margin-top: 6px; font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: #8a929c; text-align: right; }

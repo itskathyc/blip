@@ -111,7 +111,10 @@
 .post-shop { margin: 0; padding: 10px 12px; border-left: 3px solid #03c75a; background: #f7f8f7; font-size: 13px; font-weight: 700; }
 
 /* 찢을 수 있는 단위: 올리면 점선, 고르면 실선. 한 번 더 누르면 한 단계 큰 단위로 */
+body.peel .pane.dig [data-tear] { outline: 2px dashed rgba(47, 124, 246, .85); outline-offset: 2px; border-radius: 4px; } /* Cmd = 잡을 수 있는 것 전부 점선 */
 [data-thov] { outline: 1.5px dashed var(--accent); outline-offset: 2px; border-radius: 4px; } /* 커서는 평소 그대로 (누를 때만 쥔 손) */
+[data-tmulti] { outline: 2.5px solid var(--accent) !important; outline-offset: 2px; border-radius: 4px; background-color: rgba(47, 124, 246, .1); position: relative; } /* Cmd+Shift로 여러 개 고름 */
+[data-tmulti]::after { content: attr(data-tmulti); position: absolute; right: -8px; top: -8px; z-index: 3; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; font: 800 11px/20px -apple-system, sans-serif; text-align: center; }
 [data-tsel] { outline: 2.5px solid var(--accent); outline-offset: 2px; border-radius: 4px; background-color: rgba(47, 124, 246, .06); }
 
 @media (prefers-reduced-motion: reduce) { .pc.wig { animation: none; } }
@@ -591,3 +594,111 @@ a.yf-row:hover { box-shadow: 0 0 0 1.5px rgba(0, 0, 0, .12); }
 .fp-no { z-index: 2; }
 .fp-lead { gap: 6px; }
 .fp-lead-txt > p:last-child { font-size: 14px; color: #1d1d1f; font-weight: 500; }
+
+/* 내 주변 빵집: 지도 · 대표메뉴 */
+.bp-map { margin: 0 0 4px; }
+.bp-menu { padding: 10px 0; border-top: .5px solid rgba(60, 60, 67, .14); }
+.bp-menu-note { margin: 3px 0 0; font-size: 12px; color: #6e6e73; }
+.bp-menu ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.bp-menu li { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.bp-menu li em { font-style: normal; color: #6e6e73; font-variant-numeric: tabular-nums; }
+.bp-menu li.hit span { font-weight: 800; box-shadow: inset 0 -6px 0 rgba(10, 132, 255, .18); }
+.bp-out { list-style: none; margin: 0; padding: 0; }
+.bp-out li { display: flex; gap: 8px; align-items: baseline; padding: 6px 0; border-top: .5px solid rgba(60, 60, 67, .12); font-size: 12px; color: #8e8e93; }
+.bp-out li b { font-weight: 600; text-decoration: line-through; text-decoration-color: rgba(60, 60, 67, .3); }
+
+/* 블립 안의 모바일 웹 (기사 캡처를 그대로 스크롤) */
+.yf-web { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; background: #fff; animation: yfIn .22s cubic-bezier(.2, 1, .3, 1); }
+@keyframes yfIn { from { transform: translateY(16px); opacity: 0; } }
+.yf-bar { flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f2f2f7; border-bottom: .5px solid rgba(60, 60, 67, .2); }
+.yf-x { width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(60, 60, 67, .12); font-size: 12px; cursor: pointer; }
+.yf-url { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 5px 10px; border-radius: 9px; background: #fff; font-size: 12.5px; color: #3a3a3c; }
+.yf-url i { font-style: normal; font-size: 10px; }
+.yf-page { flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.yf-page::-webkit-scrollbar { display: none; }
+.yf-page img { display: block; width: 100%; height: auto; user-select: none; }
+
+/* 개체 행동: 페이지에서 제거된 조각 · 영상 대본 */
+.pane.dig [data-gone] { display: none !important; }
+.dv-script { margin: 4px 0 2px; padding: 10px 12px; border-radius: 12px; background: #f2f2f7; font-size: 12.5px; line-height: 1.5; }
+.dv-script p { margin: 0; }
+.dv-script-h { display: flex; justify-content: space-between; align-items: center; font-weight: 800; margin-bottom: 4px !important; }
+.dv-script-h button { border: 0; background: none; font-size: 15px; cursor: pointer; color: #8e8e93; }
+.dv-script-none { color: #6e6e73; }
+.dv-script-ch { font-weight: 700; color: #3a3a3c; margin-bottom: 4px !important; }
+.dv-script-l { display: flex; gap: 8px; padding: 3px 0; }
+.dv-script-l time { flex: none; width: 32px; color: #0a84ff; font-weight: 700; font-variant-numeric: tabular-nums; }
+.dv-script { max-height: 190px; overflow-y: auto; }
+
+/* ================= 웹형 (Remix ▾ → 웹형으로 가져오기): 16:9 가로 868×488에 맞게 다시 배치 ================= */
+.sl.web { width: 868px; }
+
+/* 질문 · 표지 (cover · choice · checklist · verdict): 왼쪽 글 / 오른쪽 그림 · 고를 것 */
+.sl.web.play { padding: 56px 64px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 56px; align-content: center; }
+.sl.web.play > * { grid-column: 1; }
+.sl.web.play > :is(.pl-emoji, .pl-opts, .pl-check, .pl-lines) { grid-column: 2; grid-row: 1 / span 6; align-self: center; margin: 0; }
+.sl.web.play > .pl-emoji { justify-self: center; font-size: 168px; }
+.sl.web.play .big { font-size: 52px; }
+.sl.web.play .mid { font-size: 34px; }
+.sl.web.play > .pl-next { grid-column: auto; }
+
+/* 카드 · 결과 (card · result): 왼쪽 글 / 오른쪽 그림 · 숫자 */
+.sl.web:not(.play):not(.flush) { padding: 56px 64px; justify-content: center; }
+.sl.web:not(.play):not(.flush) .big { font-size: 52px; max-width: 60%; }
+.sl.web .stickers { max-width: 55%; }
+.sl.web .art.br.small { right: 70px; bottom: 50%; transform: translateY(50%) scale(1.9); transform-origin: right center; }
+.sl.web.dark { display: grid; grid-template-columns: 1fr 1.2fr; column-gap: 48px; align-content: center; }
+.sl.web.dark > * { grid-column: 1; }
+.sl.web.dark > .trio { grid-column: 2; grid-row: 1 / span 6; align-self: center; }
+
+/* 아이폰 듀오 */
+.sl.web .dv, .sl.web .cp, .sl.web .qz { padding: 26px 36px 22px; }
+.sl.web .dv:not(.open) { display: grid; grid-template-columns: repeat(3, 1fr); align-content: start; gap: 14px; }
+.sl.web .dv:not(.open) > .dv-kick { grid-column: 1 / -1; margin: 0; }
+.sl.web .dv:not(.open) .dv-card { flex-direction: column; align-items: stretch; }
+.sl.web .dv:not(.open) .dv-thumb { width: 100%; height: 150px; }
+.sl.web .dv.open { flex-direction: row; padding: 0; }
+.sl.web .dv.open .dv-main { flex: 1; height: 100%; padding: 22px 28px; }
+.sl.web .dv.open .dv-rest { flex: none; width: 230px; flex-direction: column; align-items: stretch; justify-content: center; padding: 14px; overflow-y: auto; }
+.sl.web .cp { display: grid; grid-template-columns: 330px 1fr; column-gap: 20px; align-content: start; overflow-y: auto; }
+.sl.web .cp > * { grid-column: 2; }
+.sl.web .cp > .cp-box { grid-column: 1; grid-row: 1 / span 20; align-self: start; }
+.sl.web .qz { display: grid; grid-template-columns: 1fr 1fr; align-content: start; gap: 9px 24px; }
+.sl.web .qz > :first-child { grid-column: 1 / -1; }
+
+/* AI안경 몰아보기: 왼쪽 큰 영상 / 오른쪽 기사 목록 */
+.sl.web .yf { display: grid; grid-template-columns: 1.15fr 1fr; grid-template-rows: auto 1fr; gap: 12px 26px; padding: 26px 36px; }
+.sl.web .yf-h { grid-column: 1 / -1; }
+.sl.web .yf-top { grid-column: 1; }
+.sl.web .yf-top .yf-thumb { height: 230px; }
+.sl.web .yf-list { grid-column: 2; grid-row: 2; align-self: start; gap: 10px; }
+
+/* 블립이 엮은 웹페이지: 왼쪽 제목 · 출처 / 오른쪽 본문 */
+.sl.web .bp-page { display: grid; grid-template-columns: 290px 1fr; column-gap: 28px; align-content: start; padding: 0 32px 18px 0; }
+.sl.web .bp-page > * { grid-column: 2; }
+.sl.web .bp-page > .bp-head { grid-column: 1; grid-row: 1 / span 30; align-self: start; position: sticky; top: 0; padding: 30px 0 12px 32px; }
+.sl.web .bp-page .fp-grid { grid-template-columns: repeat(4, 1fr); }
+
+/* 내 주변 빵집 (포털): 왼쪽 지도 / 오른쪽 리스트 · 대표 빵 */
+.sl.web .nv-wrap, .sl.web .nv { width: 868px; }
+.sl.web .nv-portal { display: grid; grid-template-columns: 400px 1fr; grid-auto-flow: row dense; align-content: start; }
+.sl.web .nv-portal > * { grid-column: 1 / -1; }
+.sl.web .nv-portal > .nv-blk.mapb { grid-column: 1; grid-row: span 3; position: sticky; top: 0; align-self: start; margin-top: 10px; }
+.sl.web .nv-portal > .nv-blk.list, .sl.web .nv-portal > .nv-blk.menu, .sl.web .nv-portal > .nv-credit { grid-column: 2; }
+.sl.web .nv-detail .nv-dhero { height: 220px; }
+
+/* 웹형 리스트: 가게 카드를 두 줄로 나란히 (가로로 길게 늘어나 가운데가 비지 않게) */
+.sl.web .nv-list { display: grid; grid-template-columns: 1fr 1fr; align-content: start; column-gap: 0; background: linear-gradient(180deg, #2f6fe0 0%, #7fb2ff 30%, #f4ecdf 30.2%, #f4ecdf 100%); }
+.sl.web .nv-list > :not(.nv-row) { grid-column: 1 / -1; }
+.sl.web .nv-list .nv-row, .sl.web .nv-list .nv-row.alt { flex-direction: row; margin: 10px 14px 14px; }
+.sl.web .nv-list .nv-row.alt .nv-pol { transform: rotate(-4deg); }
+
+/* 카리나 맛집처럼 가게마다 정리된 정보 */
+.bp-place { margin: 0 0 12px; padding: 14px 16px; border-radius: 14px; background: #f6f6f8; }
+.bp-place h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 16px; font-weight: 800; }
+.bp-place-no { width: 22px; height: 22px; border-radius: 50%; background: #1d1d1f; color: #fff; font-size: 12px; line-height: 22px; text-align: center; flex: none; }
+.bp-place-body { margin: 0 0 8px; font-size: 13px; line-height: 1.6; color: #3a3a3c; }
+.bp-place dl { margin: 0; display: flex; flex-direction: column; gap: 5px; }
+.bp-place dl div { display: grid; grid-template-columns: 58px 1fr; gap: 8px; font-size: 12.5px; line-height: 1.45; }
+.bp-place dt { font-weight: 700; color: #8e8e93; }
+.bp-place dd { margin: 0; color: #1d1d1f; }

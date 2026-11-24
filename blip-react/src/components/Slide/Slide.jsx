@@ -9,6 +9,9 @@ import Reader from './Reader';
 import { Videos, Coupang, Quiz } from './Duo';
 import YtFeed from './YtFeed';
 import MiniMap from '../Map/MiniMap';
+import NearViews from './NearViews';
+import CommitLog from './CommitLog';
+import Folders from './Folders';
 import MapChat from '../Map/MapChat';
 import './Slide.css';
 import './WebOrig.css';
@@ -117,14 +120,13 @@ export default function Slide({ layer, interactive = false, tear = false, sel = 
   // 컴포넌트 하나: 왼쪽 원본에선 찢을 단위, 오른쪽 내 판에선 옮길 수 있는 단위
   const tr = (id, kind = 'comp', extra = {}) => {
     if (tear) return { 'data-tear': id, 'data-kind': kind, draggable: true, ...extra };
-    // 사진·그림은 Cmd 없이도 그냥 잡아서 오른쪽으로 끌 수 있음 (왼쪽 읽기에서)
-    if (play && !interactive && kind === 'img') return { 'data-tear': id, 'data-kind': kind, draggable: true, ...extra };
+    // (예전: 사진·그림은 Cmd 없이도 끌 수 있었음 → 끔. 무엇이든 Cmd를 누르고 있는 동안만 옮김)
     if (interactive) return { 'data-comp': id, 'data-sel': sel === 'comp:' + id ? '' : undefined, style: mv(id) };
     return moves[id] ? { style: mv(id) } : {};
   };
 
   const root = (cls, bg, children) => (
-    <div className={'sl ' + cls} style={{ background: styles.bg?.background || bg }}>
+    <div className={'sl ' + cls + (layer.web ? ' web' : '')} style={{ background: styles.bg?.background || bg }}>
       {children}
       {layer.pieces?.map(p => <Piece key={p.id} p={p} styles={styles} sel={sel === 'piece:' + p.id} wiggle={wiggle} />)}
     </div>
@@ -285,6 +287,14 @@ export default function Slide({ layer, interactive = false, tear = false, sel = 
     case 'reader':
       return root('flush rdr', '#fff', <Reader layer={layer} play={play} tr={tr} />);
     // ---------- 블립이 엮은 웹페이지 (data/trip.js): 넘기지 않고 스크롤 ----------
+    // ---------- 프로젝트 커밋 로그 (가상, data/projects.js) ----------
+    case 'folders':
+      return root('flush', '#f7f7f9', <Folders layer={layer} play={play} tr={tr} />);
+    case 'commitlog':
+      return root('flush', '#16171c', <CommitLog layer={layer} play={play} />);
+    // ---------- 내 주변 빵집 결과 (data/near.js): 지도 · 리스트 · 대표메뉴 ----------
+    case 'nearres':
+      return root('flush nvw', '#fff', <NearViews layer={layer} play={play} tr={tr} />);
     case 'blipweb':
       return root('flush bp', '#fff', <BlipWeb layer={layer} play={play} t={t} tr={tr} />);
     // ---------- 웹 원문 한 장 (data/trip.js): 새 창처럼 — 주소창, 출처, 요약, 맨 아래 원문 링크 ----------

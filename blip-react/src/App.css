@@ -222,3 +222,33 @@ body.text-armed ::selection { background: #0a84ff; color: #fff; }
 .pub-menu span { font-size: 11px; color: var(--mute); }
 @keyframes pubIn { from { opacity: 0; transform: translateY(-4px); } }
 .pub-sep { display: block; height: 1px; margin: 4px 6px; background: rgba(0, 0, 0, .08); }
+
+/* Publish 메뉴 맨 위: 콘텐츠 틀 크기 (아이콘 · 올려 두면 크기) + 직접 입력 */
+.pub-size { display: flex; gap: 4px; padding: 4px 4px 2px; }
+.pub-menu .ps-ic { position: relative; flex: 1; display: grid; place-items: center; width: auto; height: 34px; padding: 0; border-radius: 8px; color: var(--ink); }
+.pub-menu .ps-ic.on { background: var(--ink); color: #fff; }
+.ps-ic::after { content: attr(data-size); position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); padding: 3px 7px; border-radius: 6px; background: #1d1d1f; color: #fff; font-size: 11px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .12s; z-index: 2; }
+.ps-ic:hover::after { opacity: 1; }
+.pub-own { display: flex; align-items: center; gap: 4px; padding: 4px 6px 6px; }
+.pub-own input { width: 54px; padding: 5px 6px; border: 0; border-radius: 7px; background: var(--sand); font: inherit; font-size: 12px; text-align: center; outline: none; }
+.pub-own input:focus { box-shadow: inset 0 0 0 1.5px var(--accent, #0a84ff); }
+.pub-own span { font-size: 12px; color: var(--mute); }
+.pub-menu .po-go { flex: 1; display: block; width: auto; min-width: 40px; white-space: nowrap; padding: 5px 0; text-align: center; font-size: 12px; font-weight: 600; }
+.pub-menu .po-go:disabled { opacity: .4; cursor: default; }
+.pub-menu .po-go.on { background: var(--ink); color: #fff; }
+.viewer-frame.sized .viewer { background: #fff; }
+.pub-menu:has(.pub-size) { min-width: 210px; }
+
+/* 떠 있는 아이템의 − (올려 두면 또렷하게) */
+.floats .fl-minus { position: absolute; z-index: 3; width: 18px; height: 18px; margin: -34px 0 0 22px; padding: 0; border: 0; border-radius: 50%; background: rgba(60, 60, 67, .45); color: #fff; font: 600 13px/17px -apple-system, sans-serif; cursor: pointer; opacity: 0; transition: opacity .15s, background .15s; pointer-events: auto; }
+.floats .pc:hover + .fl-minus, .floats .fl-minus:focus-visible { opacity: .85; }
+.floats .fl-minus:hover { opacity: 1; background: #ff3b30; }
+
+/* Split View: 왼쪽에 콘텐츠 둘을 나란히 */
+.pane.dig .stage.paired { display: flex; flex-direction: row; gap: 14px; }
+.pane.dig .stage.paired > .viewer-box, .pane.dig .stage.paired > .pair-b { flex: 1 1 0; min-width: 0; }
+.pair-b { position: relative; display: flex; animation: pairIn .4s cubic-bezier(.2, 1, .3, 1); }
+@keyframes pairIn { from { opacity: 0; transform: translateX(24px); } }
+.pair-drop { position: absolute; top: 0; bottom: 0; right: 0; width: 50%; z-index: 30; display: grid; place-items: center; border: 2px dashed #0a84ff; border-radius: 18px; background: rgba(10, 132, 255, .08); pointer-events: none; }
+.pair-drop span { padding: 6px 12px; border-radius: 999px; background: #0a84ff; color: #fff; font-size: 12.5px; font-weight: 700; }
+.remix { position: relative; } /* 왼쪽 Remix ▾ (그대로 · 웹형) */

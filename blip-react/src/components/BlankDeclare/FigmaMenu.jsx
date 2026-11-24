@@ -27,12 +27,15 @@ const ITEMS = [
 
 export default function FigmaMenu({ region, onClose, onPick, onSubmit }) {
   const [v, setV] = useState('');
+  const [more, setMore] = useState(false); // 편집 메뉴(복사 · 삭제 …)는 접어 둠 — 빈칸은 늘 기본 빈칸 선언 크기
   const m = region.menu;
   const t = !!(m.piece || m.comp || m.ins);
   const ok = need => (need === 't' ? t : need === 'clip' ? !!getClip() : need === 't+clip' ? t && !!getClip() : need === 'piece' ? !!m.piece : need === 'comp' ? !!m.comp : false);
   const run = action => { dispatchEvent(new CustomEvent('blip:menu', { detail: { action, ...m } })); onClose(); };
   return (
-    <div className="fm" style={{ left: region.x, top: region.y }} onContextMenu={e => e.preventDefault()}>
+    <div className="rg done card fm fmc" style={{ left: region.x, top: region.y, '--k': .5 }} onContextMenu={e => e.preventDefault()}>
+      <input className="fm-in" autoFocus placeholder="무엇이든 적거나, 아래에서 고르기" value={v} onChange={e => setV(e.target.value)} spellCheck="false"
+        onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && v.trim()) { e.preventDefault(); onSubmit(v.trim()); } if (e.key === 'Escape') onClose(); }} />
       {/* 지도 아이템 위 우클릭: 맨 위 추천 = 지도 상세 설계 (왼쪽에서 설계 대화가 시작됨). 그 아래는 기본 메뉴 */}
       {m.piece && m.kind === 'item' && /지도/.test(m.name || '') && (
         <ul className="fm-list fm-top" role="menu">
@@ -53,15 +56,14 @@ export default function FigmaMenu({ region, onClose, onPick, onSubmit }) {
           <li className="fm-sep" role="separator" />
         </ul>
       )}
-      <div className="fm-ics">
+      <div className="ri fm-ics">
         {/* 끼워 넣은 글 칸 위에선 맨 앞이 텍스트 에디터 */}
         {[...(m.ins ? [TEXTED] : []), ...actionsFor(region.context).map(a => (a.k === 'new' ? TEXT : a))].filter((a, i, all) => all.findIndex(b => b.k === a.k) === i).slice(0, 4).map(a => ( /* 우클릭에선 NEW 대신 텍스트 입력 */
-          <button key={a.k} className="fm-ic" title={a.t} onClick={() => onPick(a)}><img src={a.src} alt="" /></button>
+          <button key={a.k} className="ic fm-ic" title={a.t} onClick={() => onPick(a)}><img src={a.src} alt="" /><span className="icl">{a.s || a.t}</span></button>
         ))}
       </div>
-      <input className="fm-in" autoFocus placeholder="검색" value={v} onChange={e => setV(e.target.value)} spellCheck="false"
-        onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && v.trim()) { e.preventDefault(); onSubmit(v.trim()); } if (e.key === 'Escape') onClose(); }} />
-      <ul className="fm-list" role="menu">
+      <button className={'fm-more' + (more ? ' open' : '')} onClick={() => setMore(o => !o)} aria-expanded={more}>편집 메뉴<i aria-hidden="true">▾</i></button>
+      {more && <ul className="fm-list" role="menu">
         {ITEMS.map((it, i) => (it === '-'
           ? <li key={'s' + i} className="fm-sep" role="separator" />
           : (
@@ -69,7 +71,7 @@ export default function FigmaMenu({ region, onClose, onPick, onSubmit }) {
               <span>{it[1]}</span><kbd>{it[2]}</kbd>
             </li>
           )))}
-      </ul>
+      </ul>}
     </div>
   );
 }

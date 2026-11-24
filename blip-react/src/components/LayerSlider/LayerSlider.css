@@ -107,3 +107,42 @@
 .lcard:hover .lcard-minus { opacity: 1; }
 .lcard-minus:hover { background: #ff3b30; }
 .lcard.mini .lcard-minus { width: 12px; height: 12px; right: 2px; top: 2px; font-size: 10px; line-height: 11px; }
+
+/* 왼쪽 콘텐츠 슬라이더: 책장 넘기듯 — 지금 화면만 가운데 크게, 양옆은 비스듬히 겹친 모서리 */
+.slider.rotary { display: block; position: relative; width: min(100%, 460px); height: 96px; padding: 0; overflow: visible; perspective: 620px; perspective-origin: 50% 50%; }
+.slider.rotary .lcard { position: absolute; left: 50%; top: 50%; width: 60px; height: 75px; margin: -37.5px 0 0 -30px; align-self: auto; opacity: var(--o, 1);
+  transform: translateX(var(--tx, 0)) rotateY(var(--ry, 0)) scale(var(--s, 1)); transform-style: preserve-3d; backface-visibility: hidden;
+  box-shadow: 0 0 0 1px var(--line), 0 6px 14px rgba(0, 0, 0, .12);
+  transition: transform .55s cubic-bezier(.22, .9, .25, 1), opacity .4s, box-shadow .2s; }
+.slider.rotary .lcard.gl { transform-origin: 100% 50%; }
+.slider.rotary .lcard.gr { transform-origin: 0% 50%; }
+.slider.rotary .lcard:hover { transform: translateX(var(--tx, 0)) rotateY(var(--ry, 0)) scale(var(--s, 1)); }
+.slider.rotary .lcard.ghost:hover { filter: brightness(1.06); }
+.slider.rotary .lcard.cur { box-shadow: 0 0 0 1.5px var(--ink), 0 10px 22px rgba(0, 0, 0, .2); }
+.slider.rotary .lcard.mini { width: 60px; height: 75px; opacity: var(--o, 1); }
+.slider.rotary .lcard.mini .lcard-scale { transform: scale(calc(60 / 390)); }
+.slider.rotary .lcard.ghost::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, .14), rgba(0, 0, 0, 0)); pointer-events: none; } /* 옆 책장의 그늘 */
+.slider.rotary .lcard.gl::after { background: linear-gradient(270deg, rgba(0, 0, 0, .14), rgba(0, 0, 0, 0)); }
+.slider.rotary .lcard.gone { pointer-events: none; }
+.slider.rotary .lcard.ghost .lcard-minus { display: none; }
+.slider.rotary .lcard.stack { overflow: hidden; }
+
+/* /flipbook: 더 책처럼 — 펼친 가운데 장은 크게, 책등 그늘, 양옆은 종이 두께처럼 촘촘히 쌓인 모서리, 넘김은 천천히 */
+.slider.rotary.book { width: min(100%, 620px); height: 150px; perspective: 900px; perspective-origin: 50% 40%; }
+.slider.rotary.book .lcard { border-radius: 4px; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .12), 0 10px 22px rgba(20, 30, 60, .22);
+  transition: transform .75s cubic-bezier(.2, .8, .2, 1), opacity .5s, box-shadow .2s; }
+.slider.rotary.book .lcard.cur { border-radius: 4px 8px 8px 4px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .25), 0 18px 34px rgba(20, 30, 60, .32); }
+.slider.rotary.book .lcard.cur::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 14%; z-index: 2; pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 0, 0, .28), rgba(0, 0, 0, .06) 45%, transparent); } /* 책등 */
+.slider.rotary.book .lcard.ghost::after { background: linear-gradient(90deg, rgba(0, 0, 0, .22), rgba(255, 255, 255, .06) 60%, rgba(0, 0, 0, .1)); }
+.slider.rotary.book .lcard.gl::after { background: linear-gradient(270deg, rgba(0, 0, 0, .22), rgba(255, 255, 255, .06) 60%, rgba(0, 0, 0, .1)); }
+.slider.rotary.book .lcard.ghost { filter: none; }
+
+/* 웹형(16:9) 장의 썸네일: 가로로 */
+.lcard.webl { width: 104px; height: 58px; }
+.lcard.webl .lcard-scale { transform: scale(calc(104 / 868)); }
+
+/* 책장 슬라이더: 흔들기·들림이 책장 배치를 덮어쓰지 않게 (끌어서 나란히 보기) */
+.slider.rotary .lcard.holding { transform: translateX(var(--tx, 0)) rotateY(var(--ry, 0)) scale(var(--s, 1)); }
+.slider.rotary.wiggle .lcard:not(.lcard-add) { animation: none; }
+.slider.rotary .lcard[draggable='true'] { cursor: grab; }

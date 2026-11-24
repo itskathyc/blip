@@ -5,6 +5,10 @@ const icon = name => import.meta.env.BASE_URL + 'icons/' + name;
 const KIT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#fff4dc"/><path d="M50 22c-17 0-30 12-30 27 0 14 11 25 24 25 5 0 6-3 5-6-1-4 1-7 6-7h6c8 0 15-6 15-14 0-14-12-25-26-25z" fill="#f2c063"/><circle cx="37" cy="44" r="5" fill="#e2483d"/><circle cx="50" cy="35" r="5" fill="#2f7cf6"/><circle cx="63" cy="42" r="5" fill="#2f9e6e"/><path d="M80 24 58 58" stroke="#3f4a3a" stroke-width="6" stroke-linecap="round"/><path d="M58 58c-4 1-7 4-7 9 4 0 8-2 9-6z" fill="#3f4a3a"/></svg>`;
 const KIT_SRC = 'data:image/svg+xml,' + encodeURIComponent(KIT_SVG);
 
+// BlipAI (B): 누르면 왼쪽에 BlipAI 대화창 (빈칸에 적은 말이 첫 질문)
+const BLIPAI_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#1d1d1f"/><path d="M36 26h17c10 0 16 5 16 13 0 5-3 9-7 10 6 1 10 6 10 12 0 9-7 15-18 15H36z M47 36v12h6c4 0 7-2 7-6s-3-6-7-6z M47 57v13h8c5 0 8-2 8-6.5S60 57 55 57z" fill="#fff" fill-rule="evenodd"/></svg>`;
+export const BLIPAI = { k: 'blipai', t: 'BlipAI', src: 'data:image/svg+xml,' + encodeURIComponent(BLIPAI_SVG) };
+
 const NEW = { k: 'new', t: '새로운 아이템선언', s: '새로 만들기', src: icon('ic-new.png') };
 
 // 텍스트 입력 아이콘 (T): 우클릭한 그 자리에 글을 바로 씀 — 오른쪽 콘텐츠의 우클릭 메뉴에서 NEW 대신
@@ -41,7 +45,16 @@ const EMPTY_PAGE = [
   TEXT // 빈 장에선 Claude 대신 텍스트 입력: 그 자리에 바로 글을 씀
 ];
 
-export const actionsFor = context => (context === 'emptypage' ? EMPTY_PAGE : context === 'edit' ? EDIT : context === 'component' ? COMPONENT : ACTIONS);
+// 개체에 맞춘 할 수 있는 것 (Cmd + 클릭 후 가만히 / 꾹 누르기). data-acts로 정함
+const REMOVE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#ffecec"/><path d="M32 36h36M44 36v-6h12v6M36 36l3 36h22l3-36" stroke="#e2483d" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const SCRIPT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#eef4ff"/><rect x="28" y="22" width="44" height="56" rx="6" fill="#fff" stroke="#2f7cf6" stroke-width="5"/><path d="M37 38h26M37 49h26M37 60h16" stroke="#2f7cf6" stroke-width="5" stroke-linecap="round"/></svg>`;
+const UNIT = {
+  video: [
+    { k: 'unit-remove', t: '해당 페이지에서 제거', s: '제거', src: 'data:image/svg+xml,' + encodeURIComponent(REMOVE_SVG) },
+    { k: 'unit-script', t: '대본 보기', s: '대본 보기', src: 'data:image/svg+xml,' + encodeURIComponent(SCRIPT_SVG) }
+  ]
+};
+export const actionsFor = (context, acts) => (acts && UNIT[acts]) || (context === 'emptypage' ? EMPTY_PAGE : context === 'edit' ? EDIT : context === 'component' ? COMPONENT : ACTIONS);
 
 // 찾기 아이콘 (돋보기)
 const FIND_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#e9f1ff"/><circle cx="44" cy="44" r="18" fill="none" stroke="#2f7cf6" stroke-width="8"/><path d="M58 58l18 18" stroke="#2f7cf6" stroke-width="9" stroke-linecap="round"/></svg>`;
@@ -51,6 +64,6 @@ const FIND_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
 const COMPONENT = [
   NEW,
   { k: 'find', t: '비슷한 것 찾기', s: '비슷한 것', src: 'data:image/svg+xml,' + encodeURIComponent(FIND_SVG) },
-  { k: 'claude', t: 'Claude', src: icon('ic-claude.png') },
+  BLIPAI,
   { k: 'kakao', t: '카카오톡', src: icon('ic-kakao.png') }
 ];

@@ -3,7 +3,7 @@ import Slide from '../Slide/Slide';
 import EditSurface from '../Edit/EditSurface';
 import './Carousel.css';
 
-const W = 390;
+const CARD_W = 390, WEB_W = 868; // 웹형(16:9) 장은 가로 868 (세로 488 그대로)
 const TAP = 6; // 이보다 덜 움직이면 클릭으로 봄
 
 // 캐러셀 콘텐츠만. 콘텐츠 위에서 끌면 = 넘기기 (빈칸 선언은 콘텐츠 바깥 캔버스에서만)
@@ -19,12 +19,13 @@ export default function Carousel({ layers, index, onIndex, editable, wheel, edit
   const dragRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const cur = layers[index] || layers[0];
+  const W = layers[0]?.web ? WEB_W : CARD_W;
   const last = layers.length - 1;
 
   useEffect(() => {
     const el = trackRef.current;
     if (Math.round(el.scrollLeft / W) !== index) el.scrollTo({ left: index * W, behavior: 'smooth' });
-  }, [index, layers.length]);
+  }, [index, layers.length, W]);
 
   const onScroll = () => {
     if (dragRef.current) return;
@@ -163,7 +164,7 @@ export default function Carousel({ layers, index, onIndex, editable, wheel, edit
   const swallow = e => { if (dragging) { e.stopPropagation(); e.preventDefault(); } };
 
   return (
-    <div className={'cs' + (enter > 0 ? ' enter-next' : enter < 0 ? ' enter-prev' : '')} ref={rootRef} onPointerDownCapture={navDown}>
+    <div className={'cs' + (enter > 0 ? ' enter-next' : enter < 0 ? ' enter-prev' : '')} ref={rootRef} onPointerDownCapture={navDown} style={W !== CARD_W ? { '--view-w': W } : undefined}>
       <div className={'cs-track' + (dragging ? ' dragging' : '')} ref={trackRef} onScroll={onScroll}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onClickCapture={swallow} onWheel={onWheel}>
         {layers.map(layer => (

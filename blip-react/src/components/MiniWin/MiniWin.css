@@ -1,0 +1,17 @@
+/* 작은 새 창 */
+.mw { position: fixed; z-index: 1500; width: 300px; max-height: 420px; display: flex; flex-direction: column; border-radius: 14px; background: #fff; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .14), 0 18px 48px rgba(0, 0, 0, .22); overflow: hidden; animation: mwIn .2s cubic-bezier(.2, 1, .3, 1); font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif; color: #1d1d1f; }
+@keyframes mwIn { from { opacity: 0; transform: scale(.94) translateY(6px); } }
+.mw-bar { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 9px 10px 9px 14px; background: #f5f5f7; border-bottom: .5px solid rgba(60, 60, 67, .16); cursor: grab; user-select: none; }
+.mw-bar:active { cursor: grabbing; }
+.mw-bar b { font-size: 13px; font-weight: 700; }
+.mw-x { width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: rgba(60, 60, 67, .14); color: #1d1d1f; font: 700 15px/21px -apple-system, sans-serif; cursor: pointer; }
+.mw-x:hover { background: #ff3b30; color: #fff; }
+.mw-body { overflow-y: auto; padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; overscroll-behavior: contain; }
+.mw-place { padding: 10px 12px; border-radius: 10px; background: #f6f6f8; }
+.mw-place h4 { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font-size: 13.5px; font-weight: 800; }
+.mw-place h4 span { width: 18px; height: 18px; border-radius: 50%; background: #1d1d1f; color: #fff; font-size: 10.5px; line-height: 18px; text-align: center; flex: none; }
+.mw-place p { margin: 0 0 6px; font-size: 12px; line-height: 1.55; color: #3a3a3c; }
+.mw-place dl { margin: 0; display: flex; flex-direction: column; gap: 3px; }
+.mw-place dl div { display: grid; grid-template-columns: 50px 1fr; gap: 6px; font-size: 11.5px; line-height: 1.45; }
+.mw-place dt { font-weight: 700; color: #8e8e93; }
+.mw-place dd { margin: 0; }

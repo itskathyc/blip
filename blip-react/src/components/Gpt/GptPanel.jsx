@@ -56,10 +56,9 @@ export default function GptPanel({ seed, from, answer, onOpen, onClose }) {
   const send = () => { if (!v.trim()) return; ask(v); setV(''); };
 
   return (
-    <aside className="gpt-panel" ref={ref} aria-label="ChatGPT">
+    <aside className="gpt-panel" ref={ref} aria-label="BlipAI">
       <header className="gpt-head">
-        <span className="gpt-logo"><GptMark /></span>
-        <b>ChatGPT</b>
+        <b>BlipAI</b>
         <span className="gpt-on">연결됨</span>
         <button className="gpt-x" onClick={onClose} aria-label="대화창 닫기" title="닫기">×</button>
       </header>

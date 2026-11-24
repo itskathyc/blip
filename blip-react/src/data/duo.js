@@ -1,6 +1,18 @@
 // 아이폰 듀오 살까말까: 블립이 가져오는 것들
 // 후기 3개는 실제 콘텐츠 (2026-11-19 확인: 제목·날짜·내용은 보도·영상 소개에 나온 그대로 — from = 그 내용을 확인한 곳)
 // type: 'text' = 글로 정리된 후기 (텍스트형 카드), 'video' = 영상 후기. 누르면 블립 안에서 펼쳐 봄 (바깥 페이지로 안 나감)
+// 대본: 사용자가 준 자막 (Chapter 1 · 오프닝) 그대로 — 잇섭 · 주연 영상 모두 '대본 보기'에서 이것을 보여 줌 (2026-11-23 사용자 요청)
+export const DUO_SCRIPT = {
+  chapter: 'Chapter 1: 오프닝',
+  lines: [
+    ['0:00', 'I can already hear the comments: "Oh, now she\'s siding with the Fold." Lately, while preparing my reviews, I\'ve been recording thoughts and ideas with these earbuds as they come to me.'],
+    ['0:10', '"October 22, the day after my unboxing. Having used the Fold8, the Duo feels harder to use. I should really capture those differences.'],
+    ['0:19', 'iPhone Duo: design, weight, Touch ID, hinge, volume buttons. Note the Touch ID issues. Keyboard options, durability, and AppleCare+ costs: list the downsides.'],
+    ['0:26', 'October 23, noon: iPhone usability issues and pain. October 23, 12:07 p.m.: Duo weight and gesture issues.'],
+    ['0:31', 'October 23, 6 p.m.: display settings and grip issues." I\'ve kept taking notes like this since the unboxing went up.']
+  ]
+};
+
 export const VIDEOS = [
   {
     // 원문: Gadget Review의 MKBHD 리뷰 기사를 2026-11-19 모바일 화면으로 캡처 (MacDailyNews는 자동 접속을 막아 캡처 불가)
@@ -35,7 +47,7 @@ export const VIDEOS = [
       { who: '날스*', up: 20, text: '다들 리뷰에서 듣고 싶은 대답을 정해놓고 보는거임?' },
       { who: '농구**', up: 0, text: '근데 주는것도 아니고 대여가 웃긴다ㅋㅋ' }
     ],
-    type: 'video', ch: '잇섭', who: '국내 테크 리뷰', from: '유튜브 라이브 · 뉴시스 보도', color: '#111', flag: '🇰🇷', title: '아이폰 듀오 리뷰 · 내구성 라이브', date: '2026.10.26', dur: '라이브 약 3시간',
+    type: 'video', script: DUO_SCRIPT, ch: '잇섭', who: '국내 테크 리뷰', from: '유튜브 라이브 · 뉴시스 보도', color: '#111', flag: '🇰🇷', title: '아이폰 듀오 리뷰 · 내구성 라이브', date: '2026.10.26', dur: '라이브 약 3시간',
     say: '“무거워서 오래 쓰면 피로감이 더 빨리 온다”',
     body: [
       '직접 산 제품을 라이브로 100번 넘게 접고 비틀고, 모래를 뿌리고 떨어뜨려 봤어요.',
@@ -57,7 +69,7 @@ export const VIDEOS = [
       { who: '유튜***', up: 12, text: '언박싱 브금 뭐예요?' },
       { who: '하루***', up: 8, text: '실사용 후기도 기다릴게요' }
     ],
-    type: 'video', ch: '주연 ZUYONI', who: '국내 테크 리뷰', from: '유튜브 · 다나와 소개', color: '#e86aa6', flag: '🇰🇷', title: '폴더블에 환장한 여자의 ‘아이폰 듀오’ 언박싱 & 첫 사용 후기', date: '2026.10.22', dur: '약 19분',
+    type: 'video', script: DUO_SCRIPT, ch: '주연 ZUYONI', who: '국내 테크 리뷰', from: '유튜브 · 다나와 소개', color: '#e86aa6', flag: '🇰🇷', title: '폴더블에 환장한 여자의 ‘아이폰 듀오’ 언박싱 & 첫 사용 후기', date: '2026.10.22', dur: '약 19분',
     say: '',
     body: [
       '언박싱부터. 물리 유심 없이 eSIM으로만 쓰는 구조예요.',

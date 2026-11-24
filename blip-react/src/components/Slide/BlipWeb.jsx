@@ -1,3 +1,4 @@
+import NearMap from '../Map/NearMap';
 import { useState } from 'react';
 import { Bread } from '../Art/Bread';
 import { SOURCES, BAKERY_POOL } from '../../data/trip';
@@ -70,7 +71,7 @@ function Tune({ play, applied, onApply, tr }) {
 
 export default function BlipWeb({ layer, play, t, tr }) {
   const [only, setOnly] = useState(null);
-  const [tune, setTune] = useState({ city: null, lean: null, types: [] });
+  const [tune, setTune] = useState(layer.tune0 || { city: null, lean: null, types: [] }); // 빈칸 선언에서 고른 것이 있으면 그대로 걸린 채로
   const rowsNow = layer.tune ? pickBakeries(tune) : null;
   const sections = layer.tune ? [{ type: 'rows', rows: rowsNow }] : layer.sections;
   const title = layer.tune ? `${tune.city || '프랑스'} 빵집 ${rowsNow.length}곳` : layer.title;
@@ -172,6 +173,30 @@ export default function BlipWeb({ layer, play, t, tr }) {
             </>
           )}
           {sec.type === 'pending' && <p className="bp-pending"><i /><i /><i /> {sec.text}</p>}
+          {sec.type === 'nearmap' && <div className="bp-map" {...tr('map', 'img')}><NearMap here={sec.here} pins={sec.pins} /></div>}
+          {/* 대표메뉴 모아보기: 가게마다 메뉴와 값 (고른 기준에 맞는 메뉴는 표시) */}
+          {sec.type === 'menus' && sec.shops.map(sh => (
+            <div key={sh.name} className="bp-menu" {...tr('menu:' + sh.name)}>
+              <div className="bp-row-top"><b>{sh.name}</b>{src(sh.src)}</div>
+              {sh.note && <p className="bp-menu-note">{sh.note}</p>}
+              {sh.items.length ? (
+                <ul>{sh.items.map(([m, p]) => <li key={m} className={sh.hit?.includes(m) ? 'hit' : undefined}><span>{m}</span><em>{p}</em></li>)}</ul>
+              ) : <p className="bp-menu-note">메뉴를 아직 못 모았어요</p>}
+            </div>
+          ))}
+          {/* 가게마다 정리된 정보 (위치 · 영업시간 · 가격대 · 특징) 또는 글 한 단락 */}
+          {sec.type === 'places' && sec.places.map((pl, k) => (
+            <article key={pl.name} className="bp-place" {...tr('pl:' + pl.name)}>
+              <h4><span className="bp-place-no">{k + 1}</span>{pl.name}</h4>
+              {pl.body && <p className="bp-place-body">{pl.body}</p>}
+              {pl.facts && <dl>{pl.facts.map(([l, v]) => <div key={l}><dt>{l}</dt><dd>{v}</dd></div>)}</dl>}
+            </article>
+          ))}
+          {sec.type === 'out' && (
+            <ul className="bp-out">
+              {sec.rows.map(r => <li key={r.name}><b>{r.name}</b><span>{r.why}</span></li>)}
+            </ul>
+          )}
           {sec.type === 'quote' && (
             <blockquote {...tr('q' + si)}><span>{sec.text}</span><cite>{sec.who} {src(sec.src)}</cite></blockquote>
           )}

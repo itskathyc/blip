@@ -36,6 +36,10 @@
 @keyframes vfInUp { from { transform: translateY(70%) scale(.94); opacity: 0; } }
 @keyframes vfOutDown { to { transform: translateY(70%) scale(.94); opacity: 0; } }
 @keyframes vfInDown { from { transform: translateY(-70%) scale(.94); opacity: 0; } }
+.viewer-box:has(.mv-turn) { perspective: 1600px; }
+/* 새 콘텐츠가 추가될 때: 오른쪽 책장이 넘어오듯 (왼쪽 모서리를 축으로) — 결과는 늦추지 않고 그대로 보이면서 */
+.viewer-frame.mv-turn { transform-origin: 0% 50%; animation: vfTurn .5s cubic-bezier(.2, .9, .25, 1); }
+@keyframes vfTurn { 0% { transform: rotateY(-78deg); box-shadow: -30px 0 40px rgba(0, 0, 0, .25); } 60% { box-shadow: -10px 0 24px rgba(0, 0, 0, .12); } 100% { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .viewer-frame[class*='mv-'] { animation: none; } }
 
 /* 크기 바꾸기: 손잡이 표시 없이, 그 모서리만 둥글지 않음 */

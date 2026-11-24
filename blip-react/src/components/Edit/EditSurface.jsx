@@ -186,12 +186,17 @@ export default function EditSurface({ layer, edit, wiggle, children }) {
     if (e.target.isContentEditable) return;
     const pc = e.target.closest('[data-piece]');
     const el = !pc && e.target.closest(MOVABLE);
-    const p = { x: e.clientX, y: e.clientY, moved: false, long: false };
+    // 읽기가 기본: Cmd(Ctrl)를 누르고 있는 동안만 고르고 · 옮기고 · 꾹 눌러 흔들 수 있음. 떼고 있으면 아무것도 잡지 않음
+    //   (빈칸 그리기가 시작되지 않게 손은 여기서 멈춤. 최소화 아이콘 탭으로 펼치기는 click에서 그대로)
+    //   단, 놓아 둔 조각(왼쪽에서 가져온 것 · 아이템)은 Cmd 없이도 그냥 끌어서 옮김 — 누르기만 하면 고르지 않음(편집 모드 아님)
+    const cmd = e.metaKey || e.ctrlKey;
+    if (el && !cmd) { e.stopPropagation(); return; }
+    const p = { x: e.clientX, y: e.clientY, moved: false, long: false, cmd };
     if (pc) {
       e.stopPropagation(); // 조각을 잡은 손은 넘기기가 아님
       const piece = layer.pieces.find(q => q.id === pc.dataset.piece);
       Object.assign(p, { piece: piece.id, ox: piece.x, oy: piece.y, k: scale() });
-      p.timer = setTimeout(() => { p.long = true; edit.wiggle(layer.id); }, LONG);
+      if (cmd) p.timer = setTimeout(() => { p.long = true; edit.wiggle(layer.id); }, LONG); // 꾹 눌러 흔들기는 Cmd일 때만
       const move = ev => {
         const dx = ev.clientX - p.x, dy = ev.clientY - p.y;
         if (!p.moved) {
@@ -203,7 +208,7 @@ export default function EditSurface({ layer, edit, wiggle, children }) {
       const up = ev => {
         clearTimeout(p.timer);
         removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
-        if (!p.moved && !p.long && !miniGrab) edit.select(layer.id, 'piece:' + p.piece);
+        if (!p.moved && !p.long && !miniGrab && p.cmd) edit.select(layer.id, 'piece:' + p.piece); // 고르기(편집)는 Cmd일 때만
         press.current = null;
         if (!p.moved) return;
         // 끌고 난 직후의 클릭(최소화 아이콘 펼치기 등)은 무시
@@ -236,6 +241,7 @@ export default function EditSurface({ layer, edit, wiggle, children }) {
           if (p.long || Math.hypot(dx, dy) < MOVE) return;
           p.moved = true; clearTimeout(p.timer); edit.touch(layer.id); ref.current.classList.add('moving');
         }
+        if (!(ev.metaKey || ev.ctrlKey)) return;
         edit.moveComp(layer.id, p.comp, p.ox + dx / p.k, p.oy + dy / p.k);
       };
       const up = () => {
@@ -247,6 +253,7 @@ export default function EditSurface({ layer, edit, wiggle, children }) {
       };
       addEventListener('pointermove', move); addEventListener('pointerup', up); addEventListener('pointercancel', up);
     } else {
+      if (!(e.metaKey || e.ctrlKey)) return; // 바탕 고르기도 Cmd를 누른 동안만
       p.key = 'bg';
     }
     press.current = p;

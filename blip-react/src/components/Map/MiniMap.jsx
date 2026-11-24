@@ -68,11 +68,12 @@ export default function MiniMap({ cfg, pins = [], miss = [], merge, name, w = 34
   const down = p => e => {
     if (still || e.button !== 0) return;
     e.stopPropagation();
-    const s = { x: e.clientX, y: e.clientY, moved: false };
+    const s = { x: e.clientX, y: e.clientY, moved: false, cmd: e.metaKey || e.ctrlKey }; // 핀 옮기기도 Cmd를 누르고 있는 동안만 (떼고 누르면 카드)
     // 잡은 자리와 핀 끝 사이 거리는 그대로 (핀이 손끝으로 튀지 않게)
     const r = geo.current.getBoundingClientRect(), tip = e.currentTarget.getBoundingClientRect();
     const off = { x: e.clientX - tip.left, y: e.clientY - tip.top };
     const move = ev => {
+      if (!s.cmd || !(ev.metaKey || ev.ctrlKey)) return;
       if (!s.moved && Math.hypot(ev.clientX - s.x, ev.clientY - s.y) < 4) return;
       if (!s.moved) setCard(null);
       s.moved = true;

@@ -62,3 +62,7 @@
   .gpt-dots i { animation: none; }
   .dig { transition: none; }
 }
+
+/* 오른쪽(만들기) 화면에 뜬 BlipAI: 오른쪽 가장자리에 붙고, 콘텐츠는 왼쪽으로 비켜 줌 */
+.pane.edit .gpt-panel { left: auto; right: 14px; top: 60px; }
+.pane.edit.with-gpt-r { padding-right: 354px; }

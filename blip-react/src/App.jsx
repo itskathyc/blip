@@ -26,8 +26,23 @@ import TextThrow from './components/Edit/TextThrow';
 import { TRIP, TRIP_NEXT, DAIN_TASTE, detailApp } from './data/trip';
 import { CELEB_BAKERIES, isCeleb } from './data/celebMap';
 import { findPlace } from './components/Map/places';
+import { isNear, nearPage } from './data/near';
+import { topicOf as refineTopic } from './data/refine';
+import { isKarinaFood } from './data/karina';
+import { isTrips, TRIPS_APP } from './data/trips';
+import MiniWin from './components/MiniWin/MiniWin';
+import ProjectsPanel from './components/Projects/ProjectsPanel';
+import { projectLayers } from './data/projects';
 import './App.css';
 
+// 콘텐츠 틀 크기 (Publish 메뉴 맨 위 아이콘)
+const ic = d => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const SIZES = [
+  { k: 'web', label: '웹', w: 1920, h: 1080, svg: ic('<rect x="2.5" y="4" width="19" height="12.5" rx="1.5"/><path d="M8.5 20h7M12 16.5V20"/>') },
+  { k: 'mobile', label: '모바일', w: 390, h: 488, // 모바일 = 지금 카드 크기 그대로 (더 길어지지 않음)
+    svg: ic('<rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/>') },
+  { k: 'tablet', label: '태블릿', w: 820, h: 1180, svg: ic('<rect x="4.5" y="2.5" width="15" height="19" rx="2"/><path d="M11 18.5h2"/>') }
+];
 const webBoard = w => ({ id: 'web:' + w.t, title: w.t, mine: false, color: MENU_COLOR[w.m], layers: [{ id: 'web:' + w.t, kind: 'web', w }] });
 const postLayer = p => ({ id: 'post:' + p.id, kind: 'post', post: p });
 // 불러온 블로그 글 묶음: 위 띠에는 이것 하나만, 누르면 둘째 칸에 글들이 펼쳐짐
@@ -83,7 +98,7 @@ const stem = q => q
 const SHAPE_LABEL = { rect: '사각형', frame: '프레임', line: '선', arrow: '화살표', ellipse: '원', polygon: '다각형', star: '별', pen: '펜', pencil: '연필' };
 
 // variant 'A' (/1): 위 띠 = 블립과 실시간으로 주고받는 얇은 띠(FlowStrip) + 히스토리 전경(.blip). 없으면 기존 Finder 띠
-export default function App({ variant, handMode = false }) {
+export default function App({ variant, handMode = false, flipbook = false }) {
   const A = variant === 'A';
   const NEXT = A ? { ...NEXT_OF, ...FOUND_NEXT, ...TRIP_NEXT } : NEXT_OF;
   const [apps, setApps] = useState(() => (A ? [...seedApps(), ...TRIP(), ...FOUND(), ...STARTERS(), ...RELATED()] : [...seedApps(), ...STARTERS(), ...RELATED()]));
@@ -92,8 +107,9 @@ export default function App({ variant, handMode = false }) {
   // A: 왼쪽은 처음부터 채워져 있음 — 서로 다른 주제 3개. 카드뉴스엔 다인 취향에 가장 가까운 것, 나머지는 아래 슬라이더
   const [feed, setFeed] = useState(() => (A ? FIRST_FEED : []));
   const [path, setPath] = useState(() => (A ? [FIRST_FEED[0]] : [])); // 위 칸들에서 차례로 고른 것들. 마지막 것이 왼쪽(디깅)에 뜸
-  const [suggestOpen, setSuggestOpen] = useState(false); // '오늘의 제안' 묶음을 펼쳤는지
-  const [burst, setBurst] = useState(null); // 검색 결과가 새 창 3개처럼 한꺼번에 열렸다가 자리 잡는 순간
+  const [, setSuggestOpen] = useState(false); // '오늘의 제안' 묶음 (지금은 접지 않아서 값은 안 씀)
+  const [burst, setBurst] = useState(null); // 방금 새로 띄운 것 (아래 슬라이더에서 그 카드만 살짝 튀어나옴)
+  useEffect(() => { if (!burst) return undefined; const t = setTimeout(() => setBurst(null), 700); return () => clearTimeout(t); }, [burst]);
   const [pIndex, setPIndex] = useState(0);
   const [query, setQuery] = useState('');
   const [seen, setSeen] = useState(() => new Set());
@@ -130,13 +146,19 @@ export default function App({ variant, handMode = false }) {
       removeEventListener('dragend', sync, true); removeEventListener('drop', sync, true);
     };
   }, []);
+  // Cmd를 떼면 다시 읽기: 오른쪽에서 고른 것 · 흔들림도 풀림 (Cmd는 스위치가 아니라 누르는 동안만 움직이는 버튼)
+  useEffect(() => { if (!peel) { setSel(null); setPieceWiggle(null); } }, [peel]);
+  // Cmd를 누르는 순간: 뜯을 수 있는 모든 것에 점선 (어디를 잡을 수 있는지 먼저 보임)
+  useEffect(() => { document.body.classList.toggle('peel', peel); }, [peel]);
   // Peel이 꺼지면 왼쪽에 남은 점선·고름 표시도 지움 (리액트가 모르는 속성이라 저절로 안 지워짐)
   useEffect(() => {
     if (peel) return;
-    document.querySelectorAll('[data-thov], [data-tsel]').forEach(el => { el.removeAttribute('data-thov'); el.removeAttribute('data-tsel'); });
+    document.querySelectorAll('[data-thov], [data-tsel], [data-tmulti]').forEach(el => { el.removeAttribute('data-thov'); el.removeAttribute('data-tsel'); el.removeAttribute('data-tmulti'); });
   }, [peel]);
   // 위아래 2분할: 콘텐츠 안의 한 항목(예: 주연 영상)을 잡아 왼쪽 콘텐츠 화면 밖 아무 데나 놓으면 아래에 따로 열림
   const [split, setSplit] = useState(null);
+  // Split View: 아래 슬라이더의 카드를 왼쪽 콘텐츠로 끌어 놓으면 그 콘텐츠가 옆에 나란히 (왼쪽이 넓어짐). × = 다시 한 화면
+  const [pair, setPair] = useState(null), [pairIdx, setPairIdx] = useState(0), [pairOver, setPairOver] = useState(false);
   const [viewOver, setViewOver] = useState(false);
   useEffect(() => {
     const isView = e => [...(e.dataTransfer?.types || [])].includes('text/blip-view');
@@ -279,6 +301,7 @@ export default function App({ variant, handMode = false }) {
   const currentKey = path[path.length - 1];
   const currentTile = currentKey && tileByKey(currentKey);
   const source = currentTile && sourceOf(currentTile);
+  const pairTile = pair && pair !== currentKey ? tileByKey(pair) : null, pairSrc = pairTile && sourceOf(pairTile);
 
   const select = (col, tile) => {
     setPath(p => [...p.slice(0, col), tile.key]);
@@ -303,7 +326,11 @@ export default function App({ variant, handMode = false }) {
     setNav(n => ({ ...n, i: j }));
     select(0, t);
   };
-  const canBack = nav.i > 0, canFwd = nav.i < nav.list.length - 1;
+  // 콘텐츠 안에서 한 단계 들어가 있으면(innerBack.js) '뒤로'는 먼저 그 단계를 닫음
+  const [inner, setInner] = useState(false);
+  useEffect(() => { const on = e => setInner(e.detail.on); addEventListener('blip:depth', on); return () => removeEventListener('blip:depth', on); }, []);
+  const goBack = () => { const ev = new CustomEvent('blip:back', { cancelable: true }); dispatchEvent(ev); if (!ev.defaultPrevented) goNav(-1); };
+  const canBack = inner || nav.i > 0, canFwd = nav.i < nav.list.length - 1;
 
   // 잠김: 아직 무엇을 만들지 정하지 않았으면(제목 없음) 오른쪽 콘텐츠가 떨리고 가운데 + 가 깜빡임
   // 제목 칸은 없음 — 콘텐츠의 + 를 눌러 "어떤 콘텐츠를 만드실건가요?"에 답하면 채워짐
@@ -318,7 +345,7 @@ export default function App({ variant, handMode = false }) {
     if (plus) { plus.classList.remove('pulse'); void plus.offsetWidth; plus.classList.add('pulse'); }
   };
   const guard = e => {
-    if (!LOCK_SHAKE || !locked || e.target.closest('.pane-acts, .import-plus, .lcard-add')) return;
+    if (!LOCK_SHAKE || !locked || e.target.closest('.pane-acts, .import-plus, .lcard-add, .gpt-panel')) return; // 잠겨 있어도 BlipAI 대화창은 씀
     e.preventDefault();
     e.stopPropagation();
     if (e.type === 'pointerdown') nudge();
@@ -435,12 +462,31 @@ export default function App({ variant, handMode = false }) {
 
   // Remix: 왼쪽 콘텐츠를 통째로 복제해 오른쪽에 내 판으로 띄움. 제목은 "[제목]의 복제본"
   // 오른쪽이 아직 손대지 않은 빈 새 판이면 그 자리를 쓰고, 아니면 새 판을 하나 더 만듦(지금 판은 그대로 남음)
-  const fork = src => {
+  // Projects 폴더를 누르면: 그 프로젝트의 장들이 오른쪽에 새 판으로 (슬라이더 · 화면 · 첫 장 위 아이템)
+  const openProject = name => {
+    const nb = makeNewBoard();
+    const layers = projectLayers(name, nb.id);
+    if (!layers.length) return;
+    setApps(list => [{ ...nb, title: name, layers }, ...list]);
+    setProjectId(nb.id); setIndex(0); setSel(null);
+    setFresh(layers.map(l => l.id));
+    setProjectsOpen(false);
+  };
+  // 폴더 우클릭 → commit log 확인: 왼쪽 탐색 화면에 그 프로젝트의 커밋 로그 (가상) + 화면 미리보기
+  const openLog = name => {
+    const id = 'log-' + name + '-' + Date.now();
+    setApps(list => [...list, { id, title: name + ' 커밋 로그', by: 'Blip', mine: false, detail: true, found: true, tags: name + ' 커밋 로그', layers: [makeLayer('commitlog', { app: id, project: name })] }]);
+    deriveNext('app:' + id);
+    setBurst({ id: Date.now(), keys: ['app:' + id] });
+    setProjectsOpen(false);
+  };
+  // web: 웹형(16:9)으로 가져오기 — 각 장이 가로 화면에 맞게 다시 배치됨 (Slide.css의 .sl.web)
+  const fork = (src, web = false) => {
     // 복제본을 고쳐도 원본(위 띠·왼쪽의 타인 콘텐츠)은 절대 같이 바뀌지 않게
     const title = src.title + '의 복제본';
     const untouched = locked && isEmptyStart(project.layers);
     const nb = untouched ? null : makeNewBoard();
-    const copies = src.layers.map(l => copyLayer(l, untouched ? projectId : nb.id, src.title));
+    const copies = src.layers.map(l => ({ ...copyLayer(l, untouched ? projectId : nb.id, src.title), ...(web ? { web: true } : {}) }));
     if (untouched) {
       setApps(list => list.map(a => (a.id === projectId ? { ...a, title, forkOf: src.title, layers: copies } : a)));
     } else {
@@ -563,7 +609,7 @@ export default function App({ variant, handMode = false }) {
     addPiece: (layerId, piece) => {
       const id = 'pc' + ++pid;
       updateLayer(layerId, l => vivid({ ...l, pieces: [...(l.pieces || []), { scale: 1, ...piece, id }] }));
-      setSel({ layerId, key: 'piece:' + id });
+      if (peel) setSel({ layerId, key: 'piece:' + id }); // 새로 생긴 것도 Cmd를 누르고 있을 때만 고른 상태로 (아니면 읽기 그대로)
       return id;
     },
     // 콘텐츠 안에 끼워 넣은 글 칸 (우클릭 → 텍스트 입력)
@@ -581,7 +627,7 @@ export default function App({ variant, handMode = false }) {
     wiggle: layerId => setPieceWiggle(layerId),
     setText: (layerId, key, text) => updateLayer(layerId, l => vivid({ ...l, texts: { ...(l.texts || {}), [key]: text } })),
     movePiece: (layerId, id, x, y) => updateLayer(layerId, l => ({
-      ...l, pieces: l.pieces.map(p => (p.id === id ? { ...p, x: clamp(x, -160, 550), y: clamp(y, -160, 648) } : p)) // 네모 밖으로도 끌 수 있게 (놓으면 떠 있는 아이템)
+      ...l, pieces: l.pieces.map(p => (p.id === id ? { ...p, x: clamp(x, -160, 1030), y: clamp(y, -160, 648) } : p)) // 네모 밖으로도 끌 수 있게 (놓으면 떠 있는 아이템)
     })),
     scalePiece: (layerId, id, f) => updateLayer(layerId, l => vivid({
       ...l, pieces: l.pieces.map(p => (p.id === id ? { ...p, scale: clamp((p.scale || 1) * f, .4, 3) } : p))
@@ -616,15 +662,23 @@ export default function App({ variant, handMode = false }) {
     setDropOver(false);
     // 오른쪽 화면 어디에 놓아도 내 판이 받음 (아래 레이어 줄이 먼저 받았으면 그대로). 던져 두기(Stash)는 오른쪽 밖에서만
     if (e.defaultPrevented) return;
+    // 놓는 순간에도 Cmd(Ctrl)를 누르고 있어야 옮겨짐. 떼고 놓으면 아무것도 생기지 않음 (Cmd는 누르는 동안만 움직이는 버튼)
+    // Cmd를 누른 채 끌기 시작한 것(Peel 조각 · 슬라이더 카드 · 던져 둔 것)은 놓을 때 Cmd를 뗐어도 놓임.
+    //   (브라우저는 놓는 순간의 Cmd를 알려 주지 않을 때가 있음) 그 밖(글자 던지기 등)은 놓는 순간 Cmd가 있어야
     const raw = e.dataTransfer.getData('text/blip-piece');
+    const viaCmd = (() => { try { return raw && JSON.parse(raw).viaCmd; } catch { return false; } })();
+    const tileOrStash = e.dataTransfer.types.includes('text/blip-tile') || e.dataTransfer.types.includes('text/blip-stash');
+    if (!viaCmd && !tileOrStash && !(e.metaKey || e.ctrlKey)) { e.preventDefault(); setHint(Date.now()); return; }
     // 콘텐츠 위면 놓은 자리. 콘텐츠 화면 밖(또는 아직 없음)이면 그 자리에 떠 있는 아이템으로
     const vEl = e.target.closest('.viewer') || null;
     const pane = e.currentTarget.getBoundingClientRect();
     const float = (pc, i = 0) => setFloats(fs => [...fs, { id: 'f' + ++pid, piece: pc, x: e.clientX - pane.left + i * 18, y: e.clientY - pane.top + i * 18 }]);
+    // 놓은 자리 = 마우스 자리. 틀 크기(웹 · 직접 입력)나 웹형 판(가로 868)이어도 실제 콘텐츠 상자를 재서 계산
     const at = (dx = 0) => {
-      if (!vEl) return { x: 195 + dx, y: 244 + dx };
-      const v = vEl.getBoundingClientRect(), k = v.width / 390;
-      return { x: clamp((e.clientX - v.left) / k + dx, 20, 370), y: clamp((e.clientY - v.top) / k + dx, 20, 468) };
+      const box = vEl?.querySelector('.cs');
+      if (!box) return { x: 195 + dx, y: 244 + dx };
+      const v = box.getBoundingClientRect(), lw = box.offsetWidth || 390, lh = box.offsetHeight || 488, k = v.width / lw;
+      return { x: clamp((e.clientX - v.left) / k + dx, 20, lw - 20), y: clamp((e.clientY - v.top) / k + dx, 20, lh - 20) };
     };
     // 던져 둔 아이콘·폴더를 화면에 넣기 = 불러오기: 링크는 장으로, 조각은 놓은 자리에
     const stash = e.dataTransfer.getData('text/blip-stash');
@@ -646,6 +700,15 @@ export default function App({ variant, handMode = false }) {
     if (!raw && page) { e.preventDefault(); dropTile(page); return; }
     if (!raw) return;
     e.preventDefault();
+    // Cmd+Shift로 여러 개 골라 함께 끈 것: 놓은 자리에서 조금씩 비켜 차례로
+    const many = (() => { try { return JSON.parse(e.dataTransfer.getData('text/blip-pieces') || 'null'); } catch { return null; } })();
+    if (many?.length > 1) {
+      if (!vEl) { many.forEach((pc, i) => float(pc, i)); return; }
+      const L0 = project.layers[index];
+      if (!L0) return;
+      updateLayer(L0.id, l => vivid({ ...l, pieces: [...(l.pieces || []), ...many.map((pc, i) => ({ ...pc, id: 'pc' + ++pid, ...at(i * 22), scale: 1 }))] }));
+      return;
+    }
     if (!vEl) { float(JSON.parse(raw)); return; }
     const L = project.layers[index];
     if (!L) return;
@@ -669,17 +732,19 @@ export default function App({ variant, handMode = false }) {
     if (e.target.closest('[data-from]')) { edit.openFrom(e.target.closest('[data-from]').dataset.from); return; }
     const f0 = floats.find(f => f.id === id);
     const x0 = e.clientX, y0 = e.clientY;
+    const cmd = true; // 떠 있는 것은 Cmd 없이도 그냥 끌어서 옮김 (놓아 둔 것을 다시 옮기기)
     el.setPointerCapture(e.pointerId);
-    const mv = ev => setFloats(fs => fs.map(f => (f.id === id ? { ...f, x: f0.x + ev.clientX - x0, y: f0.y + ev.clientY - y0 } : f)));
+    const mv = ev => cmd && setFloats(fs => fs.map(f => (f.id === id ? { ...f, x: f0.x + ev.clientX - x0, y: f0.y + ev.clientY - y0 } : f)));
     const up = ev => {
       el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
-      if (minHit && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 5) { setFloats(fs => fs.map(f => (f.id === id ? { ...f, piece: { ...f.piece, min: !f.piece.min } } : f))); return; }
+      if (minHit && (!cmd || Math.hypot(ev.clientX - x0, ev.clientY - y0) < 5)) { setFloats(fs => fs.map(f => (f.id === id ? { ...f, piece: { ...f.piece, min: !f.piece.min } } : f))); return; }
+      if (!cmd) return;
       // 콘텐츠 화면 위에 놓았으면 그 장의 조각으로 옮김
       const vEl = document.elementsFromPoint(ev.clientX, ev.clientY).find(n => n.matches?.('.pane.edit .viewer'));
       const L = project.layers[index];
       if (!vEl || !L || !showBoard) return;
-      const v = vEl.getBoundingClientRect(), k = v.width / 390;
-      edit.addPiece(L.id, { ...f0.piece, x: clamp((ev.clientX - v.left) / k, 20, 370), y: clamp((ev.clientY - v.top) / k, 20, 468) }); // 아이콘이면 아이콘 그대로
+      const box = vEl.querySelector('.cs') || vEl, v = box.getBoundingClientRect(), lw = box.offsetWidth || 390, lh = box.offsetHeight || 488, k = v.width / lw;
+      edit.addPiece(L.id, { ...f0.piece, x: clamp((ev.clientX - v.left) / k, 20, lw - 20), y: clamp((ev.clientY - v.top) / k, 20, lh - 20) }); // 아이콘이면 아이콘 그대로
       setFloats(fs => fs.filter(f => f.id !== id));
     };
     el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
@@ -800,6 +865,17 @@ export default function App({ variant, handMode = false }) {
     setFresh([]);
   };
   const [pubOpen, setPubOpen] = useState(false);
+  const [remixOpen, setRemixOpen] = useState(false);
+  const [projectsOpen, setProjectsOpen] = useState(false);
+  const [wins, setWins] = useState([]); // 작은 새 창들 (카리나 맛집 등)
+  useEffect(() => { if (!remixOpen) return undefined; const close = e => { if (!e.target.closest?.('.remix')) setRemixOpen(false); }; addEventListener('pointerdown', close, true); return () => removeEventListener('pointerdown', close, true); }, [remixOpen]);
+  // 빈칸 선언의 BlipAI(B) → 왼쪽 BlipAI 대화창
+  useEffect(() => { const on = e => setGpt({ id: Date.now(), seed: e.detail.seed }); addEventListener('blip:ai', on); return () => removeEventListener('blip:ai', on); }, []);
+  const [hint, setHint] = useState(0); // Cmd 없이 놓았을 때 잠깐 알림
+  useEffect(() => { if (!hint) return undefined; const t = setTimeout(() => setHint(0), 1600); return () => clearTimeout(t); }, [hint]);
+  // 콘텐츠 틀 크기 (Publish 메뉴 맨 위): 없으면 기본 카드(390×488)
+  const [canvas, setCanvas] = useState(null);
+  const [own, setOwn] = useState({ w: '', h: '' });
   useEffect(() => {
     if (!pubOpen) return undefined;
     const close = e => { if (!e.target.closest?.('.pub')) setPubOpen(false); };
@@ -827,7 +903,7 @@ export default function App({ variant, handMode = false }) {
   const stepContent = dir => {
     const k = Math.max(0, path.length - 1);
     // A: 첫 슬라이더의 마지막(나만의 빵집지도)에서 위아래로 끌면 = 새 콘텐츠 'AI안경 이슈 몰아보기'가 그 뒤에 생김 (한 번만)
-    if (A && !swiping.current && currentKey === feed[feed.length - 1] && !feed.includes('app:aig')) {
+    if (A && !swiping.current && currentKey === slide.items[slide.items.length - 1] && !feed.includes('app:aig')) {
       if (!apps.some(a => a.id === 'aig')) setApps(list => [...list, AIG_APP()]);
       swiping.current = true;
       deriveNext('app:aig');
@@ -835,20 +911,32 @@ export default function App({ variant, handMode = false }) {
       setTimeout(() => { setSwipe(null); swiping.current = false; }, 380);
       return;
     }
-    // A: 위에서 아래로 끌어내리기 = 새 콘텐츠 하나 (+ 와 같음, 지금 보던 것 바로 옆에). 위로 밀기 = 다음 것
-    if (A && dir < 0) {
+    // A: 위로 밀기 = 다음 것, 끌어내리기 = 이전 것. 맨 첫 콘텐츠에서 끌어내리면 = 새로고침 (새 콘텐츠가 붙지 않음)
+    // 넘기는 순서 = 아래 슬라이더에 보이는 순서 그대로 (+로 붙인 건 슬라이더 끝에 있으니 넘겨도 끝에서)
+    const list = A ? slide.items.map(tileByKey).filter(Boolean) : columns[k]?.items || [];
+    if (!list.length) return;
+    const i = path.length ? list.findIndex(t => t.key === path[k]) : -1;
+    if (A && dir < 0 && i <= 0) {
       if (swiping.current) return;
-      const [t] = freshPicks(1);
-      if (!t) return;
       swiping.current = true;
-      deriveNext(t.key);
+      setPIndex(0);
       setSwipe({ dir, phase: 'in' });
       setTimeout(() => { setSwipe(null); swiping.current = false; }, 380);
       return;
     }
-    const list = A ? feed.map(tileByKey).filter(Boolean) : columns[k]?.items || [];
-    if (!list.length) return;
-    const i = path.length ? list.findIndex(t => t.key === path[k]) : -1;
+    // A: 맨 끝에서 더 내리면 = 새 콘텐츠 하나가 슬라이더 끝에 붙음 (+ 버튼 대신)
+    if (A && dir > 0 && i === list.length - 1) {
+      if (swiping.current) return;
+      const [t] = freshPicks(1);
+      if (!t) return;
+      swiping.current = true;
+      setFeed(f => [...f.filter(x => x !== t.key), t.key]);
+      select(0, t);
+      setBurst({ id: Date.now(), keys: [t.key] });
+      setSwipe({ dir, phase: 'in' });
+      setTimeout(() => { setSwipe(null); swiping.current = false; }, 380);
+      return;
+    }
     const next = list[i + dir];
     if (!next || swiping.current) return; // 처음/끝이면 그대로, 움직이는 중엔 한 번만
     // 빠져나가는 쪽은 Carousel이 손을 따라 이미 보냄 → 여기선 다음 카드가 반대쪽에서 들어오기만
@@ -874,8 +962,8 @@ export default function App({ variant, handMode = false }) {
   const [history, setHistory] = useState(false);
   const [hand, setHand] = useState(false); // ✋ 손 따라가기 (/hand에서만): 손이 있는 쪽 화면이 넓어짐. 끄면 반반 고정
   const [paneFocus, setPaneFocus] = useState(null);
-  const [ratio, setRatio] = useState(.5); // 왼쪽(읽기) : 오른쪽(만들기) 비율 — 가운데 선을 끌어서
-  const [resizing, setResizing] = useState(false);
+  const [ratio] = useState(.5); // 왼쪽(읽기) : 오른쪽(만들기) 비율 — 가운데 선 끌기는 꺼 둠 (다시 켜면 setRatio)
+  const [resizing] = useState(false); // 가운데 선 끌기를 다시 켜면 setResizing
   const workRef = useRef(null);
   const [strip] = useState(false); // 위 띠는 처음엔 숨김. 찾은 것들은 히스토리에서만
   useEffect(() => {
@@ -906,7 +994,8 @@ export default function App({ variant, handMode = false }) {
   //   그 밖엔 → 지금 보는 것만 원래 크기, 나머지는 모두 작게
   const slide = (() => {
     const extras = feed.filter(k => !FIRST_FEED.includes(k));
-    const folded = extras.length > 0 && !suggestOpen;
+    // 처음 3개를 '오늘의 제안' 하나로 접지 않음 (2026-11-21 사용자 요청): 새 콘텐츠는 셋 뒤에 4번째 · 5번째로 이어 붙음
+    const folded = false;
     // 묶음은 처음 3개 중 앞선 것의 자리에 (순서를 바꿔 옮길 수 있음). 펼치면 그 자리에 셋이 나란히
     const firsts = feed.filter(k => FIRST_FEED.includes(k));
     const at0 = feed.findIndex(k => FIRST_FEED.includes(k));
@@ -914,8 +1003,7 @@ export default function App({ variant, handMode = false }) {
     const items = !extras.length || at0 < 0 ? feed : [...feed.slice(0, at0).filter(k => !FIRST_FEED.includes(k)), ...group, ...feed.slice(at0).filter(k => !FIRST_FEED.includes(k))];
     const at = folded && FIRST_FEED.includes(currentKey) ? items.indexOf(TODAY) : items.indexOf(currentKey);
     const mini = items.map(k => (k === TODAY ? !FIRST_FEED.includes(currentKey)
-      : extras.length && suggestOpen ? !FIRST_FEED.includes(k)
-        : k !== currentKey));
+      : k !== currentKey));
     return { items, index: at, mini, extras, firsts };
   })();
   const todayCover = { id: TODAY, kind: 'card', color: '#f3f2ee', bread: 'croissant', head: '오늘의\n제안', sub: FIRST_FEED.length + '개',
@@ -928,13 +1016,6 @@ export default function App({ variant, handMode = false }) {
     const ok = t => t.type === 'app' && !skip.has(t.key) && !apps.find(a => a.id === t.id)?.detail;
     // 무작위로 (아직 안 본 것 · 뺀 적 없는 것 중에서)
     return tiles.filter(ok).map(t => ({ t, r: Math.random() })).sort((a, b) => a.r - b.r).slice(0, n).map(x => x.t);
-  };
-  // + : 지금 보던 것 바로 옆에 새 콘텐츠 하나
-  const suggestFresh = () => {
-    const [t] = freshPicks(1);
-    if (!t) return;
-    deriveNext(t.key);
-    setBurst({ id: Date.now(), keys: [t.key] });
   };
   const dropFromFeed = k => {
     const gone = k === TODAY ? FIRST_FEED : [k];
@@ -1047,11 +1128,49 @@ export default function App({ variant, handMode = false }) {
     addEventListener('blip:unpin', unpin); addEventListener('blip:mapdesign', design); addEventListener('blip:mapdone', done); addEventListener('blip:mapmerge', merge); addEventListener('blip:mappin', pin);
     return () => { removeEventListener('blip:unpin', unpin); removeEventListener('blip:mapdesign', design); removeEventListener('blip:mapdone', done); removeEventListener('blip:mapmerge', merge); removeEventListener('blip:mappin', pin); };
   });
-  const askA = q => {
+  const askA = (q, picks, view) => {
+    // 'blip ai' (블립 AI) 만 적으면: 왼쪽에 BlipAI 대화창 (오른쪽에 띄우려면 side: 'right')
+    if (/^\s*(blip\s*ai|블립\s*(ai|에이아이))\s*$/i.test(q)) { setGpt({ id: Date.now(), seed: '' }); return; }
     // 지금 열린 콘텐츠가 그 말을 직접 받으면(예: 댓글 거르기) 검색하지 않고 거기서 처리
     const ask = new CustomEvent('blip:ask', { detail: { q }, cancelable: true });
     dispatchEvent(ask);
     if (ask.defaultPrevented) return;
+    // "내가 다녀온 해외 빵집들" → 왼쪽에 폴더로 (나라 → 도시)
+    if (isTrips(q)) {
+      const id = 'trips' + Date.now();
+      setApps(list => [...list, TRIPS_APP(id)]);
+      hear({ type: 'search', q }, [], ctxOf(q, lastCtx));
+      deriveNext('app:' + id);
+      setBurst({ id: Date.now(), keys: ['app:' + id] });
+      return;
+    }
+    // 카리나 사진 위에서 "카리나 맛집" → 새 페이지가 아니라 작은 새 창 (− 로 바로 닫음). 내용은 사용자가 준 그대로
+    if (isKarinaFood(q)) {
+      const v = document.querySelector('.pane.dig .viewer')?.getBoundingClientRect();
+      const x = v ? Math.min(innerWidth - 316, v.right - 150) : 80, y = v ? v.top + 30 : 80;
+      setWins(ws => [...ws, { id: 'w' + Date.now(), title: '카리나 맛집', x, y }]);
+      hear({ type: 'search', q }, [], ctxOf(q, lastCtx));
+      return;
+    }
+    // 프랑스 빵집처럼 결과 페이지에 상세 조정툴이 있는 주제: 빈칸에서 고른 것이 그 툴에 미리 걸린 채로 열림
+    const tp = refineTopic(q), base = apps.find(a => a.id === 'w3');
+    if (tp?.tune && base && picks && Object.keys(picks).length) {
+      const ts = Date.now(), id = 'w3-' + ts;
+      setApps(list => [...list, { ...base, id, layers: base.layers.map(l => ({ ...l, id: l.id + '-' + ts, app: id, tune0: tp.tune(picks) })) }]);
+      hear({ type: 'search', q }, [], ctxOf(q, lastCtx));
+      deriveNext('app:' + id);
+      setBurst({ id: ts, keys: ['app:' + id] });
+      return;
+    }
+    // "지금 내 주변 맛있는 빵집": 빈칸에서 고른 것(구체화)대로 거르고, 어떻게 걸렀는지까지 보여 주는 페이지
+    if (isNear(q)) {
+      const id = 'near' + Date.now();
+      setApps(list => [...list, { id, title: '내 주변 빵집', by: '내가 고른 기준대로', web: true, detail: true, mine: false, found: true, tags: q, layers: nearPage(picks || {}, view, q) }]);
+      hear({ type: 'search', q }, [], ctxOf(q, lastCtx));
+      deriveNext('app:' + id);
+      setBurst({ id: Date.now(), keys: ['app:' + id] });
+      return;
+    }
     const words = stem(q);
     const hits = rankBy(tiles.filter(t => (t.type === 'app' && !apps.find(x => x.id === t.id)?.onTitle) || t.type === 'web'), words, true).slice(0, PER_TURN);
     // 맞는 게 모자라면 취향에 가까운 것으로 채움 (지금 설계는 프랑스 쪽만 — 나머지 검색은 이렇게 채워짐)
@@ -1085,7 +1204,7 @@ export default function App({ variant, handMode = false }) {
       if (m) { deriveNext('app:' + m.id); setBurst({ id: Date.now(), keys: ['app:' + m.id] }); }
     }
   }, [project.title, posts.length]); // eslint-disable-line react-hooks/exhaustive-deps -- 제목·글 수가 바뀔 때만
-  const workStyle = A ? { gridTemplateColumns: handMode && hand && paneFocus ? (paneFocus === 'dig' ? '6fr 4fr' : '4fr 6fr') : `${ratio}fr ${1 - ratio}fr` } : undefined;
+  const workStyle = A ? { gridTemplateColumns: handMode && hand && paneFocus ? (paneFocus === 'dig' ? '6fr 4fr' : '4fr 6fr') : pairSrc ? '2fr 1fr' /* 나란히 보는 동안 왼쪽을 넓힘 (선은 블립이 옮김) */ : `${ratio}fr ${1 - ratio}fr` } : undefined;
   const enterPane = f => () => { if (A && handMode && hand && paneFocus !== f) setPaneFocus(f); }; // 움직일 때마다 확인 (버튼을 누른 그 자리에서도 바로)
 
   return (
@@ -1101,10 +1220,12 @@ export default function App({ variant, handMode = false }) {
         : <StoryStrip columns={columns} start={start} seen={seen} query={query}
           onSelect={select} onBack={() => setPath(p => p.slice(0, -1))} onClearQuery={() => search('')}
           post={postFns} batch={batch} perCol={PER_COL} onImport={() => setImporting(true)} />}
+      {wins.map(w => <MiniWin key={w.id} win={w} onMove={(id, x, y) => setWins(ws => ws.map(o => (o.id === id ? { ...o, x, y } : o)))} onClose={id => setWins(ws => ws.filter(o => o.id !== id))} />)}
       {A && history && <BlipHistory turns={turns} tileByKey={tileByKey} onRecall={recallA} onRecallMany={recallMany} onClose={() => setHistory(false)} />}
       <main className={'work' + (A ? ' a-work' : '') + (resizing ? ' resizing' : '')} style={workStyle} ref={workRef}>
+        {/* 가운데 선의 영역 조절은 꺼 둠 (2026-11-23 사용자 요청: 선 위를 스치기만 해도 파란 선이 생겨 불편). 다시 켜려면 아래 주석을 풀기
         {A && !(handMode && hand) && (
-          /* 가운데 선: 잡고 옆으로 끌면 왼쪽·오른쪽 비율이 그만큼 바뀜. 두 번 누르면 반반 */
+          / * 가운데 선: 잡고 옆으로 끌면 왼쪽·오른쪽 비율이 그만큼 바뀜. 두 번 누르면 반반 * /
           <div className="divider" style={{ left: `calc(${ratio * 100}% - 6px)` }} role="separator" aria-orientation="vertical" aria-label="화면 나누는 선"
             onPointerDown={e => {
               if (e.button !== 0) return;
@@ -1120,28 +1241,39 @@ export default function App({ variant, handMode = false }) {
             onPointerUp={() => setResizing(false)} onPointerCancel={() => setResizing(false)}
             onDoubleClick={() => setRatio(.5)} />
         )}
-        <section className={'pane dig' + (gpt ? ' with-gpt' : '')} aria-label="Read" onPointerMove={enterPane('dig')}>
-          {gpt && <GptPanel key={gpt.id} seed={gpt.seed} from={gpt.from} answer={gptAnswer} onOpen={openTile} onClose={() => setGpt(null)} />}
+        */}
+        <section className={'pane dig' + (gpt && gpt.side !== 'right' ? ' with-gpt' : '')} aria-label="Read" onPointerMove={enterPane('dig')}>
+          {gpt && gpt.side !== 'right' && <GptPanel key={gpt.id} seed={gpt.seed} from={gpt.from} answer={gptAnswer} onOpen={openTile} onClose={() => setGpt(null)} />}
           {source && (
             <div className="pane-acts">
-              {currentTile.type !== 'post' && currentTile.type !== 'bundle' && <button className="act-btn primary" onClick={() => fork(source)}>Remix</button>}
+              {currentTile.type !== 'post' && currentTile.type !== 'bundle' && (
+                /* Remix ▾: 그대로(카드) · 웹형(가로 16:9로 다시 배치) */
+                <div className="remix">
+                  <button className={'act-btn primary' + (remixOpen ? ' open' : '')} aria-haspopup="menu" aria-expanded={remixOpen} onClick={() => setRemixOpen(o => !o)}>
+                    Remix
+                    <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 4.5l3 3 3-3" /></svg>
+                  </button>
+                  {remixOpen && (
+                    <div className="pub-menu" role="menu">
+                      <button role="menuitem" onClick={() => { setRemixOpen(false); fork(source); }}><b>그대로 가져오기</b><span>카드 (390×488)</span></button>
+                      <button role="menuitem" onClick={() => { setRemixOpen(false); fork(source, true); }}><b>웹형으로 가져오기</b><span>가로 화면에 맞게 다시 배치 (16:9)</span></button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
-          <div className={'stage' + (split ? ' split' : '') + (viewOver ? ' view-over' : '')}>
-            {burst && (
-              /* 새 창 3개가 동시에 열림 → 첫째는 카드뉴스로 커지고, 나머지는 아래 슬라이더로 내려감 */
-              <div className="burst" key={burst.id} onAnimationEnd={e => { if (e.target === e.currentTarget) setBurst(null); }}>
-                {burst.keys.map((k, i) => {
-                  const t = tileByKey(k);
-                  return t && <span key={k} className={'bw bw' + i + (burst.keys.length === 1 ? ' solo' : '')}><span className="bw-in"><Slide layer={t.cover} /></span></span>;
-                })}
-              </div>
-            )}
+          <div className={'stage' + (split ? ' split' : '') + (pairSrc ? ' paired' : '') + (viewOver ? ' view-over' : '')}
+            onDragOver={e => { if (!e.dataTransfer.types.includes('text/blip-split')) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (!pairOver) setPairOver(true); }}
+            onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setPairOver(false); }}
+            onDrop={e => { const k = e.dataTransfer.getData('text/blip-split'); setPairOver(false); if (!k) return; e.preventDefault(); if (k !== currentKey) { setPair(k); setPairIdx(0); } }}>
+            {pairOver && <div className="pair-drop" aria-hidden="true"><span>여기에 놓으면 나란히 보기</span></div>}
+            {/* 새 콘텐츠 · 검색 결과는 도입 애니메이션 없이 바로 (2026-11-23 사용자 요청: 결과를 보여 주기 전 시차가 생기는 느낌). 새로 생긴 건 아래 슬라이더 카드만 살짝 튀어나옴 */}
             {/* 뒤로 · 다음: 카드 왼쪽 아래에 작게. 콘텐츠를 꾹 눌렀다 오른쪽으로 밀어도 뒤로 (왼쪽 = 다음) */}
-            <Viewer resizable move={swipe && (swipe.phase + (swipe.dir > 0 ? '-up' : '-down'))}
+            <Viewer resizable move={burst ? 'turn' : swipe && (swipe.phase + (swipe.dir > 0 ? '-up' : '-down'))} /* 새로 추가된 콘텐츠 = 책장 넘기듯 들어옴 */
               overlay={source && (
                 <div className="nav-btns">
-                <button onClick={() => goNav(-1)} disabled={!canBack} aria-label="뒤로" title="뒤로 · 꾹 눌러 오른쪽으로 밀기">
+                <button onClick={goBack} disabled={!canBack} aria-label="뒤로" title="뒤로 · 꾹 눌러 오른쪽으로 밀기">
                   <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
                 </button>
                 <button onClick={() => goNav(1)} disabled={!canFwd} aria-label="다음" title="다음 · 꾹 눌러 왼쪽으로 밀기">
@@ -1153,13 +1285,23 @@ export default function App({ variant, handMode = false }) {
                 ? (
                   <TearSurface source={{ id: currentKey, title: source.title }}>
                     <Carousel key={source.id} layers={source.layers} index={pIndex} onIndex={setPIndex} editable={false} wheel tear={peel} me={meFns}
-                      onSwipe={peel ? undefined : stepContent} pageKey={peel ? currentKey : undefined} onNav={goNav} />
+                      onSwipe={peel ? undefined : stepContent} pageKey={peel ? currentKey : undefined} onNav={d => (d < 0 ? goBack() : goNav(d))} />
                   </TearSurface>
                 )
                 : (
                   <div className="view-empty" />
                 )}
             </Viewer>
+            {pairSrc && (
+              /* Split View: 옆에 나란히 연 콘텐츠 (읽기 · Cmd로 뜯기 모두 같음) */
+              <div className="pair-b" key={pair}>
+                <Viewer resizable overlay={<button className="split-x" onClick={() => setPair(null)} aria-label="나란히 보기 닫기" title="닫기">×</button>}>
+                  <TearSurface source={{ id: pair, title: pairSrc.title }}>
+                    <Carousel key={'pair-' + pairSrc.id} layers={pairSrc.layers} index={pairIdx} onIndex={setPairIdx} editable={false} wheel tear={peel} />
+                  </TearSurface>
+                </Viewer>
+              </div>
+            )}
             {split && (
               /* 잡아서 콘텐츠 밖으로 끌어 놓은 것: 아래 절반에 따로 열림 (새 창처럼). × = 닫고 다시 한 화면 */
               <div className="split-b" key={split.id}>
@@ -1174,10 +1316,11 @@ export default function App({ variant, handMode = false }) {
           {A
             ? (
               /* 아래 슬라이더 = 이번 결과 3개 (콘텐츠 단위). 눌러서 위 카드뉴스로, 끌어서 던져 두기 */
-              <LayerSlider layers={slide.items.map(k => (k === TODAY ? todayCover : tileByKey(k)?.cover)).filter(Boolean)} index={Math.max(0, slide.index)} active fresh={[]}
-                dragKeys={slide.items.map(k => (k === TODAY ? FIRST_FEED[0] : k))} cls={slide.items.map(k => (k === TODAY ? 'stack' : ''))}
+              <LayerSlider layers={slide.items.map(k => (k === TODAY ? todayCover : tileByKey(k)?.cover)).filter(Boolean)} index={Math.max(0, slide.index)} active fresh={burst ? burst.keys.map(k => tileByKey(k)?.cover?.id).filter(Boolean) : []}
+                dragKeys={peel ? slide.items.map(k => (k === TODAY ? FIRST_FEED[0] : k)) : undefined}
+                splitKeys={peel ? undefined : slide.items.map(k => (k === TODAY ? FIRST_FEED[0] : k))} /* Cmd 없이 끌면 = 왼쪽 콘텐츠 옆에 나란히 (Split View) */ cls={slide.items.map(k => (k === TODAY ? 'stack' : ''))}
                 mini={slide.mini} onGo={i => slideGo(slide.items[i])} onRemove={(id, i) => dropFromFeed(slide.items[i])}
-                onAdd={suggestFresh} addTitle="새 콘텐츠 제안받기"
+                rotary={flipbook ? 'book' : true}
                 onMove={(from, to) => { // 0.2초 눌러 잡고 옮기기 = 순서 바꾸기 (묶음은 셋이 함께 옮겨짐)
                   const order = slide.items.slice();
                   const [k] = order.splice(from, 1);
@@ -1186,20 +1329,30 @@ export default function App({ variant, handMode = false }) {
                 }} />
             )
             : (
-              <LayerSlider layers={source ? source.layers : []} index={pIndex} active fresh={[]} dragKey={currentTile?.type === 'post' ? null : currentKey}
+              <LayerSlider layers={source ? source.layers : []} index={pIndex} active fresh={[]} dragKey={peel && currentTile?.type !== 'post' ? currentKey : null}
                 onGo={setPIndex} />
             )}
         </section>
-        <section className={'pane edit' + (locked ? ' locked' : '')} aria-label="Create" onPointerMove={enterPane('edit')}
+        <section className={'pane edit' + (locked ? ' locked' : '') + (gpt?.side === 'right' ? ' with-gpt-r' : '')} aria-label="Create" onPointerMove={enterPane('edit')}
           onPointerDownCapture={guard} onClickCapture={guard}
           onDragOver={dragOver} onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDropOver(false); }} onDrop={dropPiece}>
+          {/* 빈칸 선언에 'blip ai' → 오른쪽(만들기) 화면에 BlipAI 대화창 */}
+          {gpt?.side === 'right' && <GptPanel key={gpt.id} seed={gpt.seed} from={gpt.from} answer={gptAnswer} onOpen={openTile} onClose={() => setGpt(null)} />}
           {floats.length > 0 && (
             /* 떠 있는 아이템: 잡아서 옮기기 · 콘텐츠 화면 위에 놓으면 그 장의 조각이 됨 · ▾/▸ 접기 */
             <div className="floats" onPointerDown={floatDown}>
-              {floats.map(f => <Piece key={f.id} p={{ ...f.piece, id: f.id, x: f.x, y: f.y, scale: f.piece.scale || 1 }} />)}
+              {floats.map(f => (
+                <div key={f.id} style={{ display: 'contents' }}>
+                  <Piece p={{ ...f.piece, id: f.id, x: f.x, y: f.y, scale: f.piece.scale || 1 }} />
+                  {/* 떠 있는 아이템 지우기: 올려 두면 보이는 − (꾹 누르기 없이, 슬라이더와 같은 문법) */}
+                  <button className="fl-minus" style={{ left: f.x, top: f.y }} title="지우기" aria-label="지우기"
+                    onPointerDown={e => e.stopPropagation()} onClick={() => setFloats(fs => fs.filter(x => x.id !== f.id))}>−</button>
+                </div>
+              ))}
             </div>
           )}
           {saved > 0 && <div className="saved-toast" key={saved} role="status">저장됨</div>}
+          {hint > 0 && <div className="saved-toast" key={'h' + hint} role="status">Cmd를 누른 채 놓아야 옮겨져요</div>}
           <div className="pane-acts">
             {/* Publish를 누르면 아래로 두 갈래: Commit = 지금 판을 그대로 저장(나만) · Publish = 확정하고 건넬 링크 복사 */}
             <div className="pub">
@@ -1210,12 +1363,30 @@ export default function App({ variant, handMode = false }) {
               </button>
               {pubOpen && (
                 <div className="pub-menu" role="menu">
+                  {/* 맨 위: 콘텐츠 틀 크기 — 아이콘만, 올려 두면 크기. 다시 누르면 기본으로 */}
+                  <div className="pub-size">
+                    {SIZES.map(z => (
+                      <button key={z.k} className={'ps-ic' + (canvas?.k === z.k ? ' on' : '')} data-size={`${z.label} ${z.w}×${z.h}`} aria-label={`${z.label} ${z.w}×${z.h}`}
+                        onClick={() => setCanvas(c => (c?.k === z.k ? null : z))} dangerouslySetInnerHTML={{ __html: z.svg }} />
+                    ))}
+                  </div>
+                  <div className="pub-own">
+                    <input inputMode="numeric" placeholder="가로" value={own.w} onChange={e => setOwn(o => ({ ...o, w: e.target.value.replace(/\D/g, '') }))}
+                      onKeyDown={e => { if (e.key === 'Enter' && +own.w && +own.h) setCanvas({ k: 'own', w: +own.w, h: +own.h }); }} aria-label="가로" />
+                    <span>×</span>
+                    <input inputMode="numeric" placeholder="세로" value={own.h} onChange={e => setOwn(o => ({ ...o, h: e.target.value.replace(/\D/g, '') }))}
+                      onKeyDown={e => { if (e.key === 'Enter' && +own.w && +own.h) setCanvas({ k: 'own', w: +own.w, h: +own.h }); }} aria-label="세로" />
+                    <button className={'po-go' + (canvas?.k === 'own' ? ' on' : '')} disabled={!(+own.w && +own.h)} onClick={() => setCanvas({ k: 'own', w: +own.w, h: +own.h })}>적용</button>
+                  </div>
+                  <i className="pub-sep" role="separator" />
                   <button role="menuitem" onClick={() => { setPubOpen(false); commit(); }}><b>Commit</b><span>지금 판을 저장</span></button>
                   <button role="menuitem" onClick={() => { setPubOpen(false); share(); }}><b>Publish</b><span>확정하고 링크 복사</span></button>
                   <i className="pub-sep" role="separator" />
                   <button role="menuitem" onClick={() => { setPubOpen(false); createNew(); }}><b>Create New</b><span>새 판 열기</span></button>
+                  <button role="menuitem" onClick={() => { setPubOpen(false); setProjectsOpen(true); }}><b>Projects</b><span>내 프로젝트 폴더</span></button>
                 </div>
               )}
+              {projectsOpen && <ProjectsPanel onClose={() => setProjectsOpen(false)} onOpen={openProject} onLog={openLog} />}
             </div>
           </div>
           <div className={'stage' + (dropOver ? ' drop-over' : '')} ref={stageRef} onAnimationEnd={e => e.currentTarget.classList.remove('shake')}>
@@ -1223,7 +1394,8 @@ export default function App({ variant, handMode = false }) {
                 단, 왼쪽에서 뜯어 온 것을 놓으면 그 자리에서 판이 생김 */}
             {showBoard && (
               /* 새 장은 그냥 빈 화면 (가운데 + 없음) */
-              <Viewer resizable>
+              <Viewer resizable size={canvas} innerW={project.layers[0]?.web ? 868 : 390} /* 웹형으로 가져온 판은 가로 868 */
+                bg={project.layers[index]?.styles?.bg?.background || project.layers[index]?.color || '#f6f5f2'} /* 틀이 남으면 그 장의 배경색으로 채움 */>
                 <Carousel key={project.id} layers={project.layers} index={index} onIndex={setIndex} editable wheel
                   edit={edit} sel={sel} wiggle={pieceWiggle} onPick={pick} onPublish={publish} onMore={suggestMore} />
               </Viewer>

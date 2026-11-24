@@ -8,12 +8,13 @@ import './BlankDeclare.css';
 // 여기서 누르면 빈칸 그리기를 시작하지 않음 (원래 동작이 있는 곳)
 const NODRAW = '.rg, .fm, .px, .tb, .te, .bitem, button, a, input, textarea, label, .strip-wrap, .slider, .remix, .cs, .view-empty, .gpt-panel, .fs, .bh';
 const GRID = 24, snap = v => Math.round(v / GRID) * GRID;
-// 작은 빈칸 (우클릭·꾹 누르기): 글자로 치면 40pt 한 줄 높이
-const COMPACT_W = 200, COMPACT_H = 30;
+// 우클릭 · Cmd+클릭 · 꾹 누르기로 여는 빈칸도 그려서 연 빈칸과 똑같은 판 (모든 빈칸의 기준 = 기본 빈칸 선언)
+//   (예전엔 가로로 긴 한 줄짜리 작은 빈칸이었음)
+const COMPACT_W = 240, COMPACT_H = 110;
 const compactAt = (x, y, extra) => ({
   x: Math.max(8, Math.min(innerWidth - COMPACT_W - 8, x)),
   y: Math.max(8, Math.min(innerHeight - COMPACT_H - 8, y)),
-  w: COMPACT_W, h: COMPACT_H, done: true, compact: true, ...extra
+  done: true, ...extra
 });
 // 빈칸을 놓으면: 그린 자리(왼쪽 위)에 내용만큼의 작은 유리판이 뜸 — 빈 공간 없이. 그린 자리·크기는 drawn에 남김
 // (새 아이템은 drawn 자리·크기 그대로 놓임). 화면 밖으로 나가지 않게 판의 대략 크기(240×110)로 막음
@@ -31,6 +32,8 @@ const readLearned = () => { try { return localStorage.getItem(LEARN_KEY) === '1'
 // context: 지금 하는 일 (빈칸의 3가지가 바뀜). kit: 드로잉키트가 고친 대상·도구 실행
 export default function BlankDeclare({ onSearch, demoAllowed, context, kit }) {
   const [region, setRegion] = useState(null);
+  const [answer, setAnswer] = useState(null); // 빈칸에 물어본 것의 짧은 답 (잠깐 떴다 사라짐)
+  useEffect(() => { if (!answer) return undefined; const t = setTimeout(() => setAnswer(null), 2500); return () => clearTimeout(t); }, [answer]);
   const [items, setItems] = useState([]);
   const [wiggle, setWiggle] = useState(false);
   const [drawing, setDrawing] = useState(false);
@@ -43,6 +46,8 @@ export default function BlankDeclare({ onSearch, demoAllowed, context, kit }) {
     const down = e => {
       if (e.button !== 0 || !e.target.closest) return;
       const t = e.target;
+      // Cmd를 누른 채 잡을 수 있는 것(점선)을 누르면 = 뜯어 옮기기. 빈칸 그리기는 시작하지 않음
+      if ((e.metaKey || e.ctrlKey) && t.closest('[data-tear]')) { drawRef.current = null; return; }
       if (wiggleRef.current && !t.closest('.bitem')) { setWiggle(false); return; }
       // 내 판의 빈 장 위(조각·글자가 아닌 바탕)는 빈칸을 그릴 수 있음. 드로잉키트로 그리는 중이면 그쪽이 먼저
       const onBlank = t.closest('[data-declare]') && !t.closest('[data-piece], [data-comp], [data-el], input, textarea, button, .cx')
@@ -72,13 +77,16 @@ export default function BlankDeclare({ onSearch, demoAllowed, context, kit }) {
       setLearned(true);
       try { localStorage.setItem(LEARN_KEY, '1'); } catch { /* 저장 못 해도 이번 세션 동안은 기억 */ }
     };
+    const abandon = () => { const d = drawRef.current; drawRef.current = null; if (d?.on) { setDrawing(false); setRegion(null); } };
     const key = e => { if (e.key === 'Escape') { setRegion(null); setWiggle(false); } };
     addEventListener('pointerdown', down);
+    addEventListener('dragstart', abandon, true); addEventListener('pointercancel', abandon);
     addEventListener('pointermove', move);
     addEventListener('pointerup', up);
     addEventListener('keydown', key);
     return () => {
       removeEventListener('pointerdown', down);
+      removeEventListener('dragstart', abandon, true); removeEventListener('pointercancel', abandon);
       removeEventListener('pointermove', move);
       removeEventListener('pointerup', up);
       removeEventListener('keydown', key);
@@ -91,7 +99,7 @@ export default function BlankDeclare({ onSearch, demoAllowed, context, kit }) {
   useEffect(() => {
     const menu = e => {
       const t = e.target;
-      if (t.closest?.('input, textarea, [contenteditable="true"], .gpt-panel')) return;
+      if (t.closest?.('input, textarea, [contenteditable="true"], .gpt-panel, .pj-panel, .pj-menu')) return; // 프로젝트 폴더 = 기본 우클릭 메뉴
       e.preventDefault();
       const unit = t.closest?.('[data-tear]'); // 왼쪽 원본의 컴포넌트 위라면 그 컴포넌트에 맞춘 3가지
       const subject = unit && (unit.dataset.bread || unit.innerText.trim().split(/\s+/).slice(0, 3).join(' '));
@@ -112,7 +120,9 @@ export default function BlankDeclare({ onSearch, demoAllowed, context, kit }) {
         setLearned(true);
         return;
       }
-      setRegion(compactAt(e.clientX - 12, e.clientY - COMPACT_H / 2, unit ? { context: 'component', subject } : empty ? { context: 'emptypage', layerId: empty } : {}));
+      // 버튼 위 우클릭(예: 주문하기)이면 그 버튼에 대한 질문으로 받음 (data-askctx)
+      const askCtx = t.closest?.('[data-askctx]')?.dataset.askctx;
+      setRegion(compactAt(e.clientX + 6, e.clientY + 6, { ...(unit ? { context: 'component', subject } : empty ? { context: 'emptypage', layerId: empty } : {}), ...(askCtx ? { askCtx } : {}) }));
       setLearned(true);
     };
     addEventListener('contextmenu', menu);
@@ -122,14 +132,25 @@ export default function BlankDeclare({ onSearch, demoAllowed, context, kit }) {
   // 왼쪽 원본의 컴포넌트를 꾹 누르면: 그 컴포넌트 바로 아래에 작은 빈칸 (컴포넌트를 가리지 않게)
   useEffect(() => {
     const open = e => {
-      const { rect: r, context: ctx, subject } = e.detail;
+      const { rect: r, context: ctx, subject, acts, tear, at } = e.detail;
+      // 마우스가 있는 자리에 (화면 밖으로 나가지 않게)
+      if (at) {
+        setRegion(compactAt(at.x + 10, at.y + 10, { context: ctx, subject, acts, tear }));
+        return;
+      }
       const below = r.y + r.h + 8 + COMPACT_H < innerHeight ? r.y + r.h + 8 : r.y - COMPACT_H - 8;
-      setRegion(compactAt(r.x + r.w / 2 - COMPACT_W / 2, below, { context: ctx, subject }));
+      setRegion(compactAt(r.x + r.w / 2 - COMPACT_W / 2, below, { context: ctx, subject, acts, tear }));
     };
     const close = () => setRegion(r => (r?.context === 'component' ? null : r)); // 꾹 누른 뒤 끌기 시작하면 그 빈칸은 닫음
+    // 결과의 검색 문장을 누르면: 그 자리에 빈칸이 다시 열림 (쓴 문장 · 고른 기준 그대로)
+    const research = e => {
+      const { q, picks, rect: r } = e.detail;
+      setRegion(compactAt(r.x, r.y + r.h + 6, { preset: { v: q, picks } }));
+    };
+    addEventListener('blip:research', research);
     addEventListener('blip:declare', open);
     addEventListener('blip:undeclare', close);
-    return () => { removeEventListener('blip:declare', open); removeEventListener('blip:undeclare', close); };
+    return () => { removeEventListener('blip:declare', open); removeEventListener('blip:research', research); removeEventListener('blip:undeclare', close); };
   }, []);
 
   // 새 아이템은 선언한 그 자리에. 내 판의 장 위에서 선언했으면 그 장의 조각이 되고(EditSurface가 받음),
@@ -217,8 +238,13 @@ export default function BlankDeclare({ onSearch, demoAllowed, context, kit }) {
             dispatchEvent(new CustomEvent(r.layerId ? 'blip:menu' : 'blip:floattext', { detail: { action: 'text', layerId: r.layerId, x, y } }));
             setRegion(null);
           }}
-          onSubmit={q => { setRegion(null); onSearch(q); }} />
+          onSubmit={(q, picks, view) => {
+            // 주문하기 위에서 "지금 주문하면 얼마나 걸려?" → 그 자리에 답이 잠깐 (2.5초) 떴다가 사라짐 (검색하지 않음)
+            if (region.askCtx === 'order' && /얼마나|몇\s*분|걸려|걸리/.test(q)) { setAnswer({ id: Date.now(), text: '25분', x: region.x, y: region.y }); setRegion(null); return; }
+            setRegion(null); onSearch(q, picks, view);
+          }} />
       )}
+      {answer && <div className="bd-answer" key={answer.id} style={{ left: answer.x, top: answer.y }} role="status">{answer.text}</div>}
       <GhostDemo enabled={demoAllowed && !learned && !region && !drawing} />
     </>
   );

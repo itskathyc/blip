@@ -1,3 +1,4 @@
+import { useInnerBack } from './innerBack';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { VIDEOS, COUPANG, asksFor } from '../../data/duo';
 import { answer } from '../../data/play';
@@ -153,13 +154,14 @@ function ParaExt({ ext, setExt }) {
 
 export function Videos({ layer, play, tr }) {
   const [open, setOpen] = useState(layer.open ?? null);
+  useInnerBack(open !== null && open !== undefined, () => setOpen(null), play);
   const [orig, setOrig] = useState(false); // 원문으로 읽기 (캡처한 웹페이지를 웹뷰처럼)
   const [deep, setDeep] = useState(false); // ▼ 한 번: 같은 화면에서 더 자세히 펼침 (원문 전에 한 단계)
   const Btn = play ? 'button' : 'span';
   const cur = open === null ? null : VIDEOS[open];
   // 원문 ⇄ 블립 요약: 요약 맨 아래 ▼ = 원문 펼치기 / 원문 주소창의 ▲ = 블립 요약으로 접기
   const Tri = play ? 'button' : 'span';
-  const go = i => { setOpen(i); setOrig(false); setDeep(false); setCmf(null); setExt(null); setNoVid(false); };
+  const go = i => { setOpen(i); setOrig(false); setDeep(false); setCmf(null); setExt(null); setNoVid(false); setScript(false); };
   // 댓글 거르기: 빈칸 선언에 "주연이 대댓글 단 것만 보여줘"처럼 적으면 → 로딩 원이 돌다가 그 댓글만
   const [cmf, setCmf] = useState(null); // { label, only, loading, empty }
   // 문단 우클릭 → 블립 추천을 고르면: 그 문단 아래에 이어 쓰는 컴포넌트 { comp, q, ask, phase, h }
@@ -178,6 +180,19 @@ export function Videos({ layer, play, tr }) {
   }, [play, layer.id, open]);
   // 영상 빼고 보기: 빈칸 선언에 "댓글만 보여줘" → 영상이 접히고 제목 · 댓글만 / "다시 영상도 보여줘" → 다시 영상
   const [noVid, setNoVid] = useState(false);
+  // 동영상 위에서 Cmd + 클릭 후 가만히 → 빈칸의 '해당 페이지에서 제거' · '대본 보기'
+  const [script, setScript] = useState(false);
+  useEffect(() => {
+    if (!play) return undefined;
+    const on = e => {
+      if (e.detail.tear !== 'player' + open) return;
+      e.preventDefault();
+      if (e.detail.act === 'remove') setNoVid(true);
+      if (e.detail.act === 'script') setScript(true);
+    };
+    addEventListener('blip:unitact', on);
+    return () => removeEventListener('blip:unitact', on);
+  }, [play, open]);
   useEffect(() => {
     if (!play || cur?.type !== 'video') return undefined;
     const ask = e => {
@@ -251,7 +266,17 @@ export function Videos({ layer, play, tr }) {
       ) : (
       <div className="dv-main" data-scroll="" key={open}>
         {v.type === 'video' && !noVid && (
-          <div className="dv-player" style={{ background: v.color }} {...tr('player' + open, 'img')}><i aria-hidden="true"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M3 2l5 3-5 3z" fill="#c8102e" /></svg></i><span>{v.dur}</span></div>
+          <div className="dv-player" style={{ background: v.color }} {...tr('player' + open, 'img', { 'data-acts': 'video' })}><i aria-hidden="true"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M3 2l5 3-5 3z" fill="#c8102e" /></svg></i><span>{v.dur}</span></div>
+        )}
+        {script && v.type === 'video' && (
+          /* 대본: 지어내지 않음 — 가져온 대본이 있으면 그대로, 없으면 없다고 */
+          <div className="dv-script">
+            <p className="dv-script-h">대본<button onClick={() => setScript(false)} aria-label="대본 닫기">×</button></p>
+            {v.script ? (<>
+              <p className="dv-script-ch">{v.script.chapter}</p>
+              {v.script.lines.map(([t, l]) => <p key={t} className="dv-script-l"><time>{t}</time><span>{l}</span></p>)}
+            </>) : <p className="dv-script-none">이 영상의 대본은 아직 가져오지 못했어요. 원본 영상의 자막을 연결하면 여기에 그대로 보여요.</p>}
+          </div>
         )}
         {!(noVid && v.type === 'video') && <p className="dv-meta" {...tr('meta' + open, 'text')}>{v.flag} {v.ch} · {v.from} · {v.date}</p>}
         <h4 className="dv-title" {...tr('title' + open, 'text')}>{v.title}</h4>
@@ -322,9 +347,7 @@ export function Videos({ layer, play, tr }) {
             <span><b>{o.ch}</b></span>
           </Btn>
         ))}
-        <Btn className="dv-all" onClick={play ? e => { if (!e.currentTarget.hasAttribute('data-tear')) setOpen(null); } : undefined} aria-label="모아 보기" title="모아 보기">
-          <i /><i /><i /><i />
-        </Btn>
+        {/* 모아 보기로 돌아가기는 왼쪽 아래 '뒤로' (innerBack) */}
       </div>
     </div>
   );

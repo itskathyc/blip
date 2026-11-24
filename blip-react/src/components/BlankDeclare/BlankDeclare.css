@@ -168,3 +168,71 @@ body.tool-text .edit .es { cursor: text; }
 .fm-list li.fm-blip { color: #4fb3ff; font-weight: 600; }
 .fm-list li.fm-blip kbd { color: rgba(255, 255, 255, .5); }
 .fm-top { margin-bottom: 4px; }
+
+/* 구체화: 밑줄 · 고를 것 */
+.rg .rq { order: -1; position: relative; flex: none; }
+.rg .rq input { order: 0; }
+.rq-u { position: absolute; top: calc(34px * var(--k)); height: 4px; cursor: pointer; }
+.rq-u.vague { background: radial-gradient(circle, #ff9f0a 1.2px, transparent 1.6px) 0 50% / 5px 4px repeat-x; }
+.rq-u.me { border-bottom: 2px solid #0a84ff; }
+.rq-u.on { filter: drop-shadow(0 0 2px rgba(10, 132, 255, .35)); }
+.rq-u.picked { background: none; border-bottom: 2px solid #0a84ff; }
+.rq-pop { margin: 0; display: flex; flex-direction: column; gap: calc(6px * var(--k)); animation: rqIn .18s ease-out both; }
+@keyframes rqIn { from { opacity: 0; transform: translateY(-4px); } }
+.rq-pv { margin: 0; font: 600 12px / 1.3 var(--sf); color: #0a84ff; }
+.rq-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.rq-chip { padding: 6px 10px; border: 0; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 1px rgba(60, 60, 67, .2); font: 600 12px / 1 var(--sf); color: #1d1d1f; cursor: pointer; }
+.rq-chip:hover { box-shadow: inset 0 0 0 1.5px #0a84ff; }
+.rq-chip.on { background: #0a84ff; color: #fff; box-shadow: none; }
+.rq-hint { margin: 0; font: 400 10.5px / 1.3 var(--sf); color: rgba(60, 60, 67, .45); }
+
+/* 치환값: 고를 때마다 바뀌는 한 문장. 고른 말에서 온 조각은 파랑, 아직 안 고른 것은 흐리게 */
+.rq-rw { margin: 0; padding: 11px 13px; border-radius: 12px; background: rgba(10, 132, 255, .07); font: 500 15px / 1.55 var(--sf); color: #1d1d1f; max-width: 340px; }
+.rq-rw-p { color: #0a84ff; font-weight: 700; cursor: pointer; transition: color .2s, background .2s; border-radius: 4px; }
+.rq-rw-p.soft { color: rgba(60, 60, 67, .5); font-weight: 500; border-bottom: 1.5px dashed rgba(60, 60, 67, .35); border-radius: 0; }
+.rq-rw-p.on { background: rgba(10, 132, 255, .12); }
+.rq-hint { margin-top: 6px; }
+/* 아이콘 자리 → 미리보기 */
+.rg.rq-live .rq-prev { display: flex; flex-direction: column; gap: 8px; min-width: 300px; }
+.rq-prev-h { margin: 0; font: 500 12px / 1 var(--sf); color: rgba(60, 60, 67, .6); }
+.rq-prev-h b { color: #1d1d1f; font-size: 14px; }
+.rq-prev ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.rq-prev li { display: flex; gap: 8px; align-items: baseline; padding: 5px 0; border-top: .5px solid rgba(60, 60, 67, .12); font: 400 12px / 1.3 var(--sf); transition: opacity .25s, color .25s; }
+.rq-prev li b { font-weight: 700; color: #1d1d1f; transition: color .25s; }
+.rq-prev li span { color: rgba(60, 60, 67, .7); margin-left: auto; text-align: right; }
+.rq-prev li.off { opacity: .55; }
+.rq-prev li.off b { color: rgba(60, 60, 67, .55); text-decoration: line-through; }
+.rq-prev li.off span { color: #ff3b30; }
+.rq-views { display: flex; gap: 6px; margin-top: 4px; }
+.rq-view { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; border: 0; border-radius: 10px; background: #fff; box-shadow: inset 0 0 0 1px rgba(60, 60, 67, .16); font: 600 11.5px / 1.2 var(--sf); color: #1d1d1f; cursor: pointer; }
+.rq-view i { font-style: normal; font-size: 16px; }
+.rq-view:hover { box-shadow: inset 0 0 0 1.5px #0a84ff; color: #0a84ff; }
+.rq-view:disabled { opacity: .4; cursor: default; }
+.rg .rq-own { flex: none; box-sizing: border-box; width: 130px; height: 26px; padding: 0 10px; border: 0; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 1.5px #0a84ff; font: 600 12px / 1 var(--sf); outline: none; height: auto; order: 0; }
+.rq-chip.own { box-shadow: inset 0 0 0 1px rgba(60, 60, 67, .2); border: 1px dashed transparent; color: rgba(60, 60, 67, .8); }
+.rq-chip.own.on { color: #fff; }
+.rq-multi { margin: 0 0 2px; font: 500 10.5px / 1.3 var(--sf); color: rgba(60, 60, 67, .5); }
+.rq-chip.multi.on::before { content: '✓ '; }
+.rg.done { z-index: 2000; } /* 빈칸 선언은 늘 맨 위 (콘텐츠 · 떠 있는 아이템 · 메뉴보다 위) */
+
+/* 오른쪽 콘텐츠 우클릭도 기본 빈칸 선언과 같은 판: 입력 → 아이콘 4개 → (접힌) 편집 메뉴 */
+.rg.fmc { position: fixed; width: 240px; color: #1d1d1f; padding: 9px 10px 8px; }
+.rg.fmc .fm-in { order: -1; width: 100%; margin: 0; height: 18px; padding: 0 0 6px; border-radius: 0; background: none; color: #1d1d1f; box-shadow: none; }
+.rg.fmc .fm-in::placeholder { color: rgba(60, 60, 67, .3); }
+.rg.fmc .fm-ics { padding: 0; gap: 4px; }
+.rg.fmc .fm-ic { flex: none; height: auto; background: none; }
+.rg.fmc .fm-ic:hover { background: none; }
+.fm-more { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 5px 2px 1px; border: 0; border-top: .5px solid rgba(60, 60, 67, .14); background: none; font: 500 11px/1.2 var(--sf); color: rgba(60, 60, 67, .6); cursor: pointer; }
+.fm-more i { font-style: normal; font-size: 9px; transition: transform .15s; }
+.fm-more.open i { transform: rotate(180deg); }
+.rg.fmc .fm-list { padding: 0; font-size: 12px; }
+.rg.fmc .fm-list li { height: 24px; padding: 0 6px; color: #1d1d1f; }
+.rg.fmc .fm-list li.off { color: rgba(60, 60, 67, .35); }
+.rg.fmc .fm-list li:not(.off):not(.fm-sep):hover { background: #0a84ff; color: #fff; }
+.rg.fmc .fm-list kbd { color: rgba(60, 60, 67, .45); }
+.rg.fmc .fm-sep { background: rgba(60, 60, 67, .12); }
+.rg.fmc .fm-list li.fm-blip { color: #0a84ff; }
+
+/* 빈칸에 물어본 것의 짧은 답: 그 자리에 2.5초 */
+.bd-answer { position: fixed; z-index: 2100; padding: 12px 18px; border-radius: 16px; background: #1d1d1f; color: #fff; font: 800 22px/1 var(--sf, -apple-system, sans-serif); letter-spacing: -.02em; box-shadow: 0 12px 30px rgba(0, 0, 0, .3); pointer-events: none; animation: bdAns 2.5s ease both; }
+@keyframes bdAns { 0% { opacity: 0; transform: translateY(6px) scale(.9); } 10%, 82% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-4px); } }

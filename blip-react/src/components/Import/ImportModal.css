@@ -23,3 +23,8 @@
 .imp-switch span { margin-right: 2px; }
 .imp-x { flex: none; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--mute); font-size: 22px; line-height: 1; cursor: pointer; }
 .imp-x:hover { background: var(--sand); color: var(--ink); }
+/* 탐색기 열기: 바탕 없는 아이콘 · BlipAI: 글자 */
+.imp-tag.ic { width: 32px; padding: 0; background: none; color: var(--ink); }
+.imp-tag.ic:hover { background: var(--sand); }
+.imp-tag.ai { background: var(--ink); color: #fff; letter-spacing: -.01em; }
+.imp-tag.ai:hover { background: #000; }

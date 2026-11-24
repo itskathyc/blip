@@ -1,0 +1,28 @@
+/* 폴더 둘러보기 */
+.fo { position: absolute; inset: 0; padding: 22px 20px; overflow-y: auto; background: #f7f7f9; color: #1d1d1f; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif; }
+.fo-path { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-bottom: 6px; font-size: 13px; }
+.fo-path span { display: inline-flex; align-items: center; gap: 2px; }
+.fo-path i { font-style: normal; color: #aeaeb2; margin: 0 3px; }
+.fo-path button { padding: 2px 4px; border: 0; border-radius: 5px; background: none; color: #0a84ff; font: inherit; cursor: pointer; }
+.fo-path button:hover { background: rgba(10, 132, 255, .1); }
+.fo-path b { font-weight: 800; font-size: 15px; }
+.fo-count { margin: 0 0 14px; font-size: 12px; color: #8e8e93; }
+.fo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 10px; }
+.fo-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px 8px; border: 0; border-radius: 14px; background: none; color: inherit; font: inherit; text-align: center; cursor: pointer; }
+.fo-item:hover { background: rgba(10, 132, 255, .08); }
+.fo-ic { position: relative; display: block; width: 92px; height: 72px; }
+.fo-ic svg { width: 100%; height: 100%; overflow: visible; }
+.fo-back { fill: color-mix(in srgb, var(--c) 70%, #000 0%); opacity: .75; }
+.fo-front { fill: var(--c); filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .15)); }
+.fo-ic i { position: absolute; left: 50%; top: 58%; transform: translate(-50%, -50%); font-style: normal; font-size: 26px; }
+.fo-item b { font-size: 14px; font-weight: 700; }
+.fo-item small { font-size: 11px; color: #8e8e93; }
+.fo-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 50px 20px 0; text-align: center; }
+.fo-ic.big { width: 120px; height: 94px; opacity: .55; }
+.fo-empty b { font-size: 17px; }
+.fo-empty p { margin: 0; font-size: 12.5px; line-height: 1.6; color: #8e8e93; }
+
+/* 최근에 다녀온 곳 (아직 비어 있음): 점선 테두리 + 채워 달라는 말 */
+.fo-item.recent { outline: 2px dashed #e8505b; outline-offset: -2px; background: rgba(232, 80, 91, .05); }
+.fo-recent { margin-top: 2px; font-style: normal; font-size: 11px; font-weight: 700; color: #e8505b; }
+.fo-recent-p { color: #e8505b !important; font-weight: 700; font-size: 13.5px !important; }
